@@ -36,7 +36,7 @@ locals {
           next_hop_type       = "VirtualAppliance"
           next_hop_ip_address = v_dst.hub_router_ip_address # TODO change to support Azure Firewall when module is implemented
         }
-      ] if k_src != k_dst && v_dst.mesh_peering_enabled
+      ] if k_src != k_dst && v_dst.mesh_peering_enabled && v_dst.routing_address_space != []
     ]) if v_src.mesh_peering_enabled
   }
 
