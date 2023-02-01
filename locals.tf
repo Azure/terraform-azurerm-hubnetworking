@@ -31,12 +31,24 @@ locals {
     for k_src, v_srv in var.hub_virtual_networks : k_src => flatten([
       for k_dst, v_dst in var.hub_virtual_networks : [
         for cidr in v_dst.routing_address_space : {
-          name                   = "${k_dst}-${cidr}"
-          address_prefix         = cidr
-          next_hop_type          = "VirtualAppliance"
-          next_hop_ip_address    = v_dst.hub_router_ip_address # TODO change to support Azure Firewall when module is implemented
+          name                = "${k_dst}-${cidr}"
+          address_prefix      = cidr
+          next_hop_type       = "VirtualAppliance"
+          next_hop_ip_address = v_dst.hub_router_ip_address # TODO change to support Azure Firewall when module is implemented
         }
       ] if k_src != k_dst && v_dst.mesh_peering_enabled
     ]) if v_src.mesh_peering_enabled
+  }
+
+  subnet_route_table_association_map = {
+    for assoc in flatten([
+      for k, v in var.hub_virtual_networks : [
+        for subnet in v.subnets : {
+          name = "${k}-${subnet.name}"
+          subnet_id      = lookup(module.hub_virtual_networks[k].vnet_subnets_name_id, subnet.name)
+          route_table_id = azurerm_route_table.hub_routing[k].id
+        } if subnet.assign_generated_route_table
+      ]
+    ]) : assoc.name => assoc
   }
 }

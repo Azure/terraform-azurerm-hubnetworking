@@ -53,6 +53,12 @@ resource "azurerm_route_table" "hub_routing" {
   }
 }
 
+resource "azurerm_subnet_route_table_association" "hub_routing" {
+  for_each = local.subnet_route_table_association_map
+  subnet_id = each.value.subnet_id
+  route_table_id = each.value.route_table_id
+}
+
 module "azure_firewall" {
   source = "..."
   # TODO
