@@ -16,14 +16,14 @@ module "hub_virtual_networks" {
   version  = "1.0.0"
   # ... TODO add required inputs
 
-  depends_on = [
-    azurerm_resource_group.rg
-  ]
+  # added to make sure dependency graph is correct
+  resource_group_name = each.value.resource_group_creation_enabled ? azurerm_resource_group.rg[each.value.resource_group_name].name : each.value.resource_group_name
 }
 
 resource "azurerm_virtual_network_peering" "hub_peering" {
   for_each                  = local.hub_peering_map
   name                      = each.key
+  # added to make sure dependency graph is correct
   resource_group_name       = azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name
   virtual_network_name      = var.hub_virtual_networks[each.key].name
   remote_virtual_network_id = each.value.remote_virtual_network_id
