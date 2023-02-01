@@ -17,6 +17,7 @@ locals {
     ]) : peerconfig.name => peerconfig
   }
 
+  # Create a unique set of resource groups to create
   resource_group_data = toset([
     for k, v in var.hub_virtual_networks : {
       name      = v.resource_group_name

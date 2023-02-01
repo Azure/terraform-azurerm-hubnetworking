@@ -1,4 +1,4 @@
-var "hub_virtual_networks" {
+variable "hub_virtual_networks" {
   description = "A map of hub virtual networks to create"
   type = map(object({
     name                = string
