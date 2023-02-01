@@ -44,7 +44,7 @@ locals {
     for assoc in flatten([
       for k, v in var.hub_virtual_networks : [
         for subnet in v.subnets : {
-          name = "${k}-${subnet.name}"
+          name           = "${k}-${subnet.name}"
           subnet_id      = lookup(module.hub_virtual_networks[k].vnet_subnets_name_id, subnet.name)
           route_table_id = azurerm_route_table.hub_routing[k].id
         } if subnet.assign_generated_route_table

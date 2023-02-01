@@ -36,10 +36,10 @@ resource "azurerm_virtual_network_peering" "hub_peering" {
 }
 
 resource "azurerm_route_table" "hub_routing" {
-  for_each = local.route_map
-  name     = "${each.key}-rt"
-  location = var.hub_virtual_networks[each.key].location
-  resource_group_name = azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name
+  for_each                      = local.route_map
+  name                          = "${each.key}-rt"
+  location                      = var.hub_virtual_networks[each.key].location
+  resource_group_name           = azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name
   disable_bgp_route_propagation = false
 
   dynamic "routes" {
@@ -54,8 +54,8 @@ resource "azurerm_route_table" "hub_routing" {
 }
 
 resource "azurerm_subnet_route_table_association" "hub_routing" {
-  for_each = local.subnet_route_table_association_map
-  subnet_id = each.value.subnet_id
+  for_each       = local.subnet_route_table_association_map
+  subnet_id      = each.value.subnet_id
   route_table_id = each.value.route_table_id
 }
 

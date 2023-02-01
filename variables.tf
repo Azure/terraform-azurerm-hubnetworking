@@ -10,12 +10,12 @@ var "hub_virtual_networks" {
     ddos_protection_plan            = optional(string, "")
     dns_servers                     = optional(list(string), [])
     flow_timeout_in_minutes         = optional(number, 4)
-    mesh_peering_enabled            = optional(bool, true)       # peer to other hub networks with this flag enabled?
-    resource_group_creation_enabled = optional(bool, true)       # use existing RG or create new
-    resource_group_lock_enabled     = optional(bool, true)       # enable CanNotDelete lock
+    mesh_peering_enabled            = optional(bool, true) # peer to other hub networks with this flag enabled?
+    resource_group_creation_enabled = optional(bool, true) # use existing RG or create new
+    resource_group_lock_enabled     = optional(bool, true) # enable CanNotDelete lock
     resource_group_tags             = optional(map(string))
     routing_address_space           = optional(list(string), []) # used to create route table entries for other hub networks
-    hub_router_ip_address           = optional(string, "") # Optional if using 3rd party NVAs, if not specified will use Azure Firewall address if enabled
+    hub_router_ip_address           = optional(string, "")       # Optional if using 3rd party NVAs, if not specified will use Azure Firewall address if enabled
     tags                            = optional(map(string), {})
 
     route_table_entries = optional(map(object({ # additional entries for this hub's route table
