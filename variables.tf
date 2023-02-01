@@ -15,6 +15,7 @@ var "hub_virtual_networks" {
     resource_group_lock_enabled     = optional(bool, true)       # enable CanNotDelete lock
     resource_group_tags             = optional(map(string))
     routing_address_space           = optional(list(string), []) # used to create route table entries for other hub networks
+    hub_router_ip_address           = optional(string, "") # Optional if using 3rd party NVAs, if not specified will use Azure Firewall address if enabled
     tags                            = optional(map(string), {})
 
     route_table_entries = optional(map(object({ # additional entries for this hub's route table

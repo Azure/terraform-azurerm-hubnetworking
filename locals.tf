@@ -26,4 +26,17 @@ locals {
       tags      = v.resource_group_tags
     } if v.resource_group_creation_enabled
   ])
+
+  route_map = {
+    for k_src, v_srv in var.hub_virtual_networks : k_src => flatten([
+      for k_dst, v_dst in var.hub_virtual_networks : [
+        for cidr in v_dst.routing_address_space : {
+          name                   = "${k_dst}-${cidr}"
+          address_prefix         = cidr
+          next_hop_type          = "VirtualAppliance"
+          next_hop_ip_address    = v_dst.hub_router_ip_address # TODO change to support Azure Firewall when module is implemented
+        }
+      ] if k_src != k_dst && v_dst.mesh_peering_enabled
+    ]) if v_src.mesh_peering_enabled
+  }
 }
