@@ -32,3 +32,17 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+.tflint.hcl
+.tflint_example.hcl
+tfmod-scaffold
+scripts
+**/go.sum
+
+**/vendor/
+
+.DS_Store
+.idea
+README-generated.md
+
+**/TestRecord.md.tmp
