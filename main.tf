@@ -2,8 +2,8 @@
 resource "azurerm_resource_group" "rg" {
   for_each = { for rg in local.resource_group_data : rg.name => rg }
 
-  name     = each.key
   location = each.value.location
+  name     = each.key
   tags     = each.value.tags
 }
 
@@ -36,38 +36,48 @@ resource "azurerm_virtual_network_peering" "hub_peering" {
 
   name = each.key
   # added to make sure dependency graph is correct
+  remote_virtual_network_id    = each.value.remote_virtual_network_id
   resource_group_name          = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name, var.hub_virtual_networks[each.key].resource_group_name)
   virtual_network_name         = each.value.virtual_network_name
-  remote_virtual_network_id    = each.value.remote_virtual_network_id
   allow_forwarded_traffic      = each.value.allow_forwarded_traffic
   allow_gateway_transit        = each.value.allow_gateway_transit
-  use_remote_gateways          = each.value.use_remote_gateways
   allow_virtual_network_access = each.value.allow_virtual_network_access
+  use_remote_gateways          = each.value.use_remote_gateways
 }
 
 resource "azurerm_route_table" "hub_routing" {
   for_each = local.route_map
 
-  name                          = "${each.key}-rt"
   location                      = var.hub_virtual_networks[each.key].location
+  name                          = "${each.key}-rt"
   resource_group_name           = azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name
   disable_bgp_route_propagation = false
+  tags                          = {}
 
   dynamic "route" {
     for_each = toset(each.value)
+
     content {
-      name                   = route.value.name
       address_prefix         = route.value.address_prefix
+      name                   = route.value.name
       next_hop_type          = route.value.next_hop_type
       next_hop_in_ip_address = route.value.next_hop_ip_address
     }
   }
 }
 
-resource "azurerm_subnet_route_table_association" "hub_routing" {
-  for_each       = local.subnet_route_table_association_map
-  subnet_id      = each.value.subnet_id
+resource "azurerm_subnet_route_table_association" "hub_routing_creat" {
+  for_each = local.subnet_route_table_association_map
+
   route_table_id = each.value.route_table_id
+  subnet_id      = each.value.subnet_id
+}
+
+resource "azurerm_subnet_route_table_association" "hub_routing_external" {
+  for_each = local.subnet_external_route_table_association_map
+
+  route_table_id = each.value.route_table_id
+  subnet_id      = each.value.subnet_id
 }
 
 #module "azure_firewall" {

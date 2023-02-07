@@ -17,7 +17,6 @@ locals {
       ] if v_src.mesh_peering_enabled
     ]) : peerconfig.name => peerconfig
   }
-
   # Create a unique set of resource groups to create
   resource_group_data = toset([
     for k, v in var.hub_virtual_networks : {
@@ -28,7 +27,6 @@ locals {
       tags      = v.resource_group_tags
     } if v.resource_group_creation_enabled
   ])
-
   route_map = {
     for k_src, v_src in var.hub_virtual_networks : k_src => flatten([
       for k_dst, v_dst in var.hub_virtual_networks : [
@@ -39,10 +37,20 @@ locals {
           next_hop_ip_address = v_dst.hub_router_ip_address
           # TODO change to support Azure Firewall when module is implemented
         }
-      ] if k_src != k_dst && v_dst.mesh_peering_enabled && v_dst.routing_address_space != []
+      ] if k_src != k_dst && v_dst.mesh_peering_enabled && length(v_dst.routing_address_space) != 0
     ]) if v_src.mesh_peering_enabled
   }
-
+  subnet_external_route_table_association_map = {
+    for assoc in flatten([
+      for k, v in var.hub_virtual_networks : [
+        for subnet in v.subnets : {
+          name           = "${k}-${subnet.name}"
+          subnet_id      = lookup(module.hub_virtual_networks[k].vnet_subnets_name_id, subnet.name)
+          route_table_id = subnet.external_route_table_id
+        } if subnet.external_route_table_id != null
+      ]
+    ]) : assoc.name => assoc
+  }
   subnet_route_table_association_map = {
     for assoc in flatten([
       for k, v in var.hub_virtual_networks : [
@@ -54,7 +62,6 @@ locals {
       ]
     ]) : assoc.name => assoc
   }
-
   subnets_map = {
     for k, v in var.hub_virtual_networks : k => {
       for subnetKey, subnet in v.subnets : subnetKey => {
@@ -63,12 +70,9 @@ locals {
         network_security_group                        = subnet.network_security_group
         private_endpoint_network_policies_enabled     = subnet.private_endpoint_network_policies_enabled
         private_link_service_network_policies_enabled = subnet.private_link_service_network_policies_enabled
-        route_table = subnet.external_route_table_id == null ? null : {
-          id = subnet.external_route_table_id
-        }
-        service_endpoints           = subnet.service_endpoints
-        service_endpoint_policy_ids = subnet.service_endpoint_policy_ids
-        delegations                 = subnet.delegations
+        service_endpoints                             = subnet.service_endpoints
+        service_endpoint_policy_ids                   = subnet.service_endpoint_policy_ids
+        delegations                                   = subnet.delegations
       }
     }
   }
