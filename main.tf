@@ -18,12 +18,15 @@ module "hub_virtual_networks" {
   # ... TODO add required inputs
 
   # added to make sure dependency graph is correct
-  virtual_network_name                    = each.value.name
-  virtual_network_address_space           = each.value.address_space
-  virtual_network_location                = each.value.location
-  resource_group_name                     = try(azurerm_resource_group.rg[each.value.resource_group_name].name, each.value.resource_group_name)
-  virtual_network_bgp_community           = each.value.bgp_community
-  virtual_network_ddos_protection_plan    = each.value.ddos_protection_plan
+  virtual_network_name          = each.value.name
+  virtual_network_address_space = each.value.address_space
+  virtual_network_location      = each.value.location
+  resource_group_name           = try(azurerm_resource_group.rg[each.value.resource_group_name].name, each.value.resource_group_name)
+  virtual_network_bgp_community = each.value.bgp_community
+  virtual_network_ddos_protection_plan = each.value.ddos_protection_plan_id == null ? null : {
+    id     = each.value.ddos_protection_plan_id
+    enable = true
+  }
   virtual_network_dns_servers             = each.value.dns_servers
   virtual_network_flow_timeout_in_minutes = each.value.flow_timeout_in_minutes
   virtual_network_tags                    = each.value.tags

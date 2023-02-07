@@ -7,11 +7,8 @@ variable "hub_virtual_networks" {
     location            = string
     resource_group_name = string
 
-    bgp_community = optional(string)
-    ddos_protection_plan = optional(object({
-      id     = string
-      enable = bool
-    }), null)
+    bgp_community                   = optional(string)
+    ddos_protection_plan_id         = optional(string)
     dns_servers                     = optional(list(string))
     flow_timeout_in_minutes         = optional(number, 4)
     mesh_peering_enabled            = optional(bool, true) # peer to other hub networks with this flag enabled?
@@ -79,5 +76,10 @@ variable "hub_virtual_networks" {
 
     # TODO: VPNGW variables
   }))
-  default = {}
+  default  = {}
+  nullable = false
+  validation {
+    condition     = alltrue([for k, v in var.hub_virtual_networks : k == v.name])
+    error_message = "`var.hub_virtual_networks`'s key must be equal to value's `name`."
+  }
 }
