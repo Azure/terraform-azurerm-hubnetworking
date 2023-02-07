@@ -1,6 +1,7 @@
 # Create rgs as defined by var.hub_networks
 resource "azurerm_resource_group" "rg" {
   for_each = { for rg in local.resource_group_data : rg.name => rg }
+
   name     = each.key
   location = each.value.location
   tags     = each.value.tags
@@ -12,23 +13,32 @@ resource "azurerm_resource_group" "rg" {
 # - vnet_subnets_name_ids - a map of subnet name to subnet resource id, e.g. use lookup(module.hub_virtual_networks["key"].vnet_subnets_name_id, "subnet1")
 module "hub_virtual_networks" {
   for_each = var.hub_virtual_networks
-  source   = "https://github.com/Azure/terraform-azurerm-subnets"
+  source   = "Azure/subnets/azurerm"
   version  = "1.0.0"
   # ... TODO add required inputs
 
   # added to make sure dependency graph is correct
-  resource_group_name = each.value.resource_group_creation_enabled ? azurerm_resource_group.rg[each.value.resource_group_name].name : each.value.resource_group_name
+  virtual_network_name                    = each.value.name
+  virtual_network_address_space           = each.value.address_space
+  virtual_network_location                = each.value.location
+  resource_group_name                     = try(azurerm_resource_group.rg[each.value.resource_group_name].name, each.value.resource_group_name)
+  virtual_network_bgp_community           = each.value.bgp_community
+  virtual_network_ddos_protection_plan    = each.value.ddos_protection_plan
+  virtual_network_dns_servers             = each.value.dns_servers
+  virtual_network_flow_timeout_in_minutes = each.value.flow_timeout_in_minutes
+  virtual_network_tags                    = each.value.tags
+  subnets                                 = try(local.subnets_map[each.key], {})
 }
 
 
 resource "azurerm_virtual_network_peering" "hub_peering" {
   for_each = local.hub_peering_map
-  name     = each.key
-  # added to make sure dependency graph is correct
-  resource_group_name       = azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name
-  virtual_network_name      = var.hub_virtual_networks[each.key].name
-  remote_virtual_network_id = each.value.remote_virtual_network_id
 
+  name = each.key
+  # added to make sure dependency graph is correct
+  resource_group_name          = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name, var.hub_virtual_networks[each.key].resource_group_name)
+  virtual_network_name         = each.value.virtual_network_name
+  remote_virtual_network_id    = each.value.remote_virtual_network_id
   allow_forwarded_traffic      = each.value.allow_forwarded_traffic
   allow_gateway_transit        = each.value.allow_gateway_transit
   use_remote_gateways          = each.value.use_remote_gateways
@@ -36,19 +46,20 @@ resource "azurerm_virtual_network_peering" "hub_peering" {
 }
 
 resource "azurerm_route_table" "hub_routing" {
-  for_each                      = local.route_map
+  for_each = local.route_map
+
   name                          = "${each.key}-rt"
   location                      = var.hub_virtual_networks[each.key].location
   resource_group_name           = azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name
   disable_bgp_route_propagation = false
 
-  dynamic "routes" {
+  dynamic "route" {
     for_each = toset(each.value)
     content {
-      name                   = routes.value.name
-      address_prefix         = routes.value.address_prefix
-      next_hop_type          = routes.value.next_hop_type
-      next_hop_in_ip_address = routes.value.next_hop_ip_address
+      name                   = route.value.name
+      address_prefix         = route.value.address_prefix
+      next_hop_type          = route.value.next_hop_type
+      next_hop_in_ip_address = route.value.next_hop_ip_address
     }
   }
 }
@@ -59,7 +70,7 @@ resource "azurerm_subnet_route_table_association" "hub_routing" {
   route_table_id = each.value.route_table_id
 }
 
-module "azure_firewall" {
-  source = "..."
-  # TODO
-}
+#module "azure_firewall" {
+#  source = "..."
+#  # TODO
+#}
