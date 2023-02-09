@@ -4,6 +4,7 @@
 
 **Merged pull requests:**
 
+- Suggest [\#4](https://github.com/Azure/terraform-azure-hubandspoke/pull/4) ([lonegunmanb](https://github.com/lonegunmanb))
 - Matt ffffff/initial tf [\#1](https://github.com/Azure/terraform-azure-hubandspoke/pull/1) ([matt-FFFFFF](https://github.com/matt-FFFFFF))
 
 
