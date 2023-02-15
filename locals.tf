@@ -7,8 +7,8 @@ locals {
         for k_dst, v_dst in var.hub_virtual_networks :
         {
           name                         = "${k_src}-${k_dst}"
-          virtual_network_name         = module.hub_virtual_networks[k_src].vnet_name
-          remote_virtual_network_id    = module.hub_virtual_networks[k_dst].vnet_id
+          virtual_network_name         = local.virtual_networks_modules[k_src].vnet_name
+          remote_virtual_network_id    = local.virtual_networks_modules[k_dst].vnet_id
           allow_virtual_network_access = true
           allow_forwarded_traffic      = true
           allow_gateway_transit        = true
@@ -45,23 +45,13 @@ locals {
       for k, v in var.hub_virtual_networks : [
         for subnet in v.subnets : {
           name           = "${k}-${subnet.name}"
-          subnet_id      = lookup(module.hub_virtual_networks[k].vnet_subnets_name_id, subnet.name)
+          subnet_id      = lookup(local.virtual_networks_modules[k].vnet_subnets_name_id, subnet.name)
           route_table_id = subnet.external_route_table_id
         } if subnet.external_route_table_id != null
       ]
     ]) : assoc.name => assoc
   }
-  subnet_route_table_association_map = {
-    for assoc in flatten([
-      for k, v in var.hub_virtual_networks : [
-        for subnet in v.subnets : {
-          name           = "${k}-${subnet.name}"
-          subnet_id      = lookup(module.hub_virtual_networks[k].vnet_subnets_name_id, subnet.name)
-          route_table_id = azurerm_route_table.hub_routing[k].id
-        } if subnet.assign_generated_route_table
-      ]
-    ]) : assoc.name => assoc
-  }
+
   subnets_map = {
     for k, v in var.hub_virtual_networks : k => {
       for subnetKey, subnet in v.subnets : subnetKey => {
