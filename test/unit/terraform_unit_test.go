@@ -2,6 +2,7 @@ package unit
 
 import (
 	"fmt"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thanhpk/randstr"
@@ -98,10 +99,18 @@ func TestUnit_VnetWithMeshPeeringShouldAppearInHubPeeringMap(t *testing.T) {
 			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
 				Upgrade:  true,
 				VarFiles: []string{varFilePath},
+				Logger:   logger.Discard,
 			}, func(t *testing.T, output test_helper.TerraformOutput) {
 				peeringMap := output["hub_peering_map"].(map[string]any)
 				assert.Equal(t, i.expectedPeeringCount, len(peeringMap))
-				for k, _ := range peeringMap {
+				for k, v := range peeringMap {
+					assert.Regexp(t, `vnet\d-vnet\d`, k)
+					split := strings.Split(k, "-")
+					srcVnetName := split[0]
+					dstVnetName := split[1]
+					m := v.(map[string]any)
+					assert.Equal(t, srcVnetName, m["virtual_network_name"])
+					assert.Equal(t, fmt.Sprintf("%s_id", dstVnetName), m["remote_virtual_network_id"])
 					assert.False(t, strings.Contains(k, "nonMeshVnet"))
 				}
 			})
@@ -120,6 +129,7 @@ func TestUnit_VnetWithResourceGroupCreationWouldBeGatheredInResourceGroupData(t 
 	test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
 		Upgrade:  true,
 		VarFiles: []string{varFilePath},
+		Logger:   logger.Discard,
 	}, func(t *testing.T, output test_helper.TerraformOutput) {
 		data, ok := output["resource_group_data"].([]any)
 		require.True(t, ok)
