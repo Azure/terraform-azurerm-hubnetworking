@@ -5,7 +5,3 @@ output "hub_peering_map" {
 output "resource_group_data" {
   value = local.resource_group_data
 }
-
-output "middle" {
-  value = local.middle
-}
