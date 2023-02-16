@@ -8,6 +8,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 
 	test_helper "github.com/Azure/terraform-module-test-helper"
@@ -61,21 +63,50 @@ func (n vnet) withSubnet(name, addressSpace string) vnet {
 }
 
 func TestUnit_VnetWithMeshPeeringShouldAppearInHubPeeringMap(t *testing.T) {
-	varFilePath := vars{
-		"hub_virtual_networks": map[string]vnet{
-			"vnet0":       aVnet("vnet0", true),
-			"vnet1":       aVnet("vnet1", true),
-			"nonMeshVnet": aVnet("nonMeshVnet", false),
+	inputs := []struct {
+		vars                 vars
+		expectedPeeringCount int
+	}{
+		{
+			vars: vars{
+				"hub_virtual_networks": map[string]vnet{
+					"vnet0":       aVnet("vnet0", true),
+					"vnet1":       aVnet("vnet1", true),
+					"nonMeshVnet": aVnet("nonMeshVnet", false),
+				},
+			},
+			expectedPeeringCount: 2,
 		},
-	}.toFile(t)
-	defer func() { _ = os.Remove(varFilePath) }()
-	test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
-		Upgrade:  true,
-		VarFiles: []string{varFilePath},
-	}, func(t *testing.T, output test_helper.TerraformOutput) {
-		peeringMap := output["hub_peering_map"].(map[string]any)
-		assert.Equal(t, 2, len(peeringMap))
-	})
+		{
+			vars: vars{
+				"hub_virtual_networks": map[string]vnet{
+					"vnet0":       aVnet("vnet0", true),
+					"vnet1":       aVnet("vnet1", true),
+					"vnet2":       aVnet("vnet2", true),
+					"nonMeshVnet": aVnet("nonMeshVnet", false),
+				},
+			},
+			expectedPeeringCount: 6,
+		},
+	}
+
+	for _, input := range inputs {
+		i := input
+		t.Run(strconv.Itoa(i.expectedPeeringCount), func(t *testing.T) {
+			varFilePath := i.vars.toFile(t)
+			defer func() { _ = os.Remove(varFilePath) }()
+			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+				Upgrade:  true,
+				VarFiles: []string{varFilePath},
+			}, func(t *testing.T, output test_helper.TerraformOutput) {
+				peeringMap := output["hub_peering_map"].(map[string]any)
+				assert.Equal(t, i.expectedPeeringCount, len(peeringMap))
+				for k, _ := range peeringMap {
+					assert.False(t, strings.Contains(k, "nonMeshVnet"))
+				}
+			})
+		})
+	}
 }
 
 func TestUnit_VnetWithResourceGroupCreationWouldBeGatheredInResourceGroupData(t *testing.T) {
