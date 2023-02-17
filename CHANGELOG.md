@@ -4,6 +4,7 @@
 
 **Merged pull requests:**
 
+- build\(deps\): bump github.com/hashicorp/go-getter/v2 from 2.1.1 to 2.2.0 in /test [\#5](https://github.com/Azure/terraform-azure-hubandspoke/pull/5) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Suggest [\#4](https://github.com/Azure/terraform-azure-hubandspoke/pull/4) ([lonegunmanb](https://github.com/lonegunmanb))
 - Matt ffffff/initial tf [\#1](https://github.com/Azure/terraform-azure-hubandspoke/pull/1) ([matt-FFFFFF](https://github.com/matt-FFFFFF))
 
