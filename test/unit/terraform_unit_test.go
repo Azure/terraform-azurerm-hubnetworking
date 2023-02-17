@@ -1,12 +1,8 @@
 package unit
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/thanhpk/randstr"
-	"k8s.io/apimachinery/pkg/util/json"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,7 +10,11 @@ import (
 	"testing"
 
 	test_helper "github.com/Azure/terraform-module-test-helper"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/thanhpk/randstr"
 )
 
 type vars map[string]any
