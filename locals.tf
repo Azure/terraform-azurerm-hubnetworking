@@ -47,7 +47,7 @@ locals {
           next_hop_ip_address = v_dst.hub_router_ip_address
           # TODO change to support Azure Firewall when module is implemented
         }
-      ] if k_src != k_dst && v_dst.mesh_peering_enabled && length(v_dst.routing_address_space) != 0
+      ] if k_src != k_dst && v_dst.mesh_peering_enabled && v_dst.routing_address_space != null && length(v_dst.routing_address_space) != 0
     ]) if v_src.mesh_peering_enabled
   }
   subnet_external_route_table_association_map = {
