@@ -1,6 +1,6 @@
 # Create rgs as defined by var.hub_networks
 resource "azurerm_resource_group" "rg" {
-  for_each = {for rg in local.resource_group_data : rg.name => rg}
+  for_each = { for rg in local.resource_group_data : rg.name => rg }
 
   location = each.value.location
   name     = each.key
@@ -18,11 +18,11 @@ module "hub_virtual_networks" {
   # ... TODO add required inputs
 
   # added to make sure dependency graph is correct
-  virtual_network_name                 = each.value.name
-  virtual_network_address_space        = each.value.address_space
-  virtual_network_location             = each.value.location
-  resource_group_name                  = try(azurerm_resource_group.rg[each.value.resource_group_name].name, each.value.resource_group_name)
-  virtual_network_bgp_community        = each.value.bgp_community
+  virtual_network_name          = each.value.name
+  virtual_network_address_space = each.value.address_space
+  virtual_network_location      = each.value.location
+  resource_group_name           = try(azurerm_resource_group.rg[each.value.resource_group_name].name, each.value.resource_group_name)
+  virtual_network_bgp_community = each.value.bgp_community
   virtual_network_ddos_protection_plan = each.value.ddos_protection_plan_id == null ? null : {
     id     = each.value.ddos_protection_plan_id
     enable = true
@@ -34,13 +34,13 @@ module "hub_virtual_networks" {
 }
 
 locals {
-  virtual_networks_modules = {for vnet_name, vnet_module in module.hub_virtual_networks : vnet_name => vnet_module}
+  virtual_networks_modules = { for vnet_name, vnet_module in module.hub_virtual_networks : vnet_name => vnet_module }
 }
 
 resource "azurerm_virtual_network_peering" "hub_peering" {
   for_each = local.hub_peering_map
 
-  name                         = each.key
+  name = each.key
   # added to make sure dependency graph is correct
   remote_virtual_network_id    = each.value.remote_virtual_network_id
   resource_group_name          = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name, var.hub_virtual_networks[each.key].resource_group_name)
