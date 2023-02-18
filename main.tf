@@ -73,17 +73,7 @@ resource "azurerm_route_table" "hub_routing" {
 }
 
 locals {
-  subnet_route_table_association_map = {
-    for assoc in flatten([
-      for k, v in var.hub_virtual_networks : [
-        for subnet in v.subnets : {
-          name           = "${k}-${subnet.name}"
-          subnet_id      = lookup(local.virtual_networks_modules[k].vnet_subnets_name_id, subnet.name)
-          route_table_id = azurerm_route_table.hub_routing[k].id
-        } if subnet.assign_generated_route_table
-      ]
-    ]) : assoc.name => assoc
-  }
+  hub_routing = azurerm_route_table.hub_routing
 }
 
 resource "azurerm_subnet_route_table_association" "hub_routing_creat" {

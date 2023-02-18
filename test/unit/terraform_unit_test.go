@@ -38,7 +38,26 @@ type vnet struct {
 }
 
 type subnet struct {
-	AddressPrefixes []string `json:"address_prefixes"`
+	AddressPrefixes           []string `json:"address_prefixes"`
+	AssignGeneratedRouteTable bool     `json:"assign_generated_route_table""`
+	ExternalRouteTableId      *string  `json:"external_route_table_id"`
+	Name                      string   `json:"name"`
+}
+
+func aSubnet(addressSpace string) subnet {
+	return subnet{
+		AddressPrefixes: []string{addressSpace},
+	}
+}
+
+func (s subnet) UseGenerateRouteTable() subnet {
+	s.AssignGeneratedRouteTable = true
+	return s
+}
+
+func (s subnet) WithExternalRouteTableId(rtId string) subnet {
+	s.ExternalRouteTableId = &rtId
+	return s
 }
 
 func aVnet(name string, meshPeering bool) vnet {
@@ -70,8 +89,8 @@ func (n vnet) withEmptyRoutingAddressSpace() vnet {
 	return n
 }
 
-func (n vnet) withSubnet(name, addressSpace string) vnet {
-	n.Subnets[name] = subnet{AddressPrefixes: []string{addressSpace}}
+func (n vnet) withSubnet(name string, s subnet) vnet {
+	n.Subnets[name] = s
 	return n
 }
 
@@ -239,6 +258,100 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 				err := mapstructure.Decode(output["route_map"], &actual)
 				require.Nil(t, err)
 				assert.Equal(t, input.expected, actual)
+			})
+		})
+	}
+}
+
+func TestUnit_SubnetAssignGeneratedRouteTableWouldProvisionGeneratedRouteTableAssociation(t *testing.T) {
+	inputs := []struct {
+		name     string
+		network  vnet
+		expected map[string]any
+	}{
+		{
+			name: "no association to generated route table",
+			network: aVnet("vnet0", false).
+				withSubnet("subnet0", aSubnet("10.0.0.0/24")),
+			expected: map[string]any{},
+		},
+		{
+			name: "association to generated route table",
+			network: aVnet("vnet0", false).
+				withSubnet("subnetAssociatedWithGeneratedRouteTable", aSubnet("10.0.0.0/24").UseGenerateRouteTable()).
+				withSubnet("subnetAssociatedWithExternalRouteTable", aSubnet("10.0.0.0/24").WithExternalRouteTableId("external_route_table_id")),
+			expected: map[string]any{
+				"vnet0-subnetAssociatedWithGeneratedRouteTable": map[string]any{
+					"name":           "vnet0-subnetAssociatedWithGeneratedRouteTable",
+					"subnet_id":      "subnetAssociatedWithGeneratedRouteTable_id",
+					"route_table_id": "vnet0_route_table_id",
+				},
+			},
+		},
+	}
+	for i := 0; i < len(inputs); i++ {
+		input := inputs[i]
+		t.Run(input.name, func(t *testing.T) {
+			varFilePath := vars{
+				"hub_virtual_networks": map[string]any{
+					input.network.Name: input.network,
+				},
+			}.toFile(t)
+			defer func() { _ = os.Remove(varFilePath) }()
+			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+				Upgrade:  true,
+				VarFiles: []string{varFilePath},
+				Logger:   logger.Discard,
+			}, func(t *testing.T, output test_helper.TerraformOutput) {
+				subnetGenerateRouteTableAssociatoins := output["subnet_route_table_association_map"].(map[string]any)
+				assert.Equal(t, input.expected, subnetGenerateRouteTableAssociatoins)
+			})
+		})
+	}
+}
+
+func TestUnit_SubnetAssignExternalRouteTableWouldProvisionAssociationToExternalRouteTable(t *testing.T) {
+	inputs := []struct {
+		name     string
+		network  vnet
+		expected map[string]any
+	}{
+		{
+			name: "no association to external route table",
+			network: aVnet("vnet0", false).
+				withSubnet("subnet0", aSubnet("10.0.0.0/24")),
+			expected: map[string]any{},
+		},
+		{
+			name: "association to external route table",
+			network: aVnet("vnet0", false).
+				withSubnet("subnetAssociatedWithGeneratedRouteTable", aSubnet("10.0.0.0/24").UseGenerateRouteTable()).
+				withSubnet("subnetAssociatedWithExternalRouteTable", aSubnet("10.0.0.0/24").WithExternalRouteTableId("external_route_table_id")),
+			expected: map[string]any{
+				"vnet0-subnetAssociatedWithExternalRouteTable": map[string]any{
+					"name":           "vnet0-subnetAssociatedWithExternalRouteTable",
+					"subnet_id":      "subnetAssociatedWithExternalRouteTable_id",
+					"route_table_id": "external_route_table_id",
+				},
+			},
+		},
+	}
+	for i := 0; i < len(inputs); i++ {
+		input := inputs[i]
+		t.Run(input.name, func(t *testing.T) {
+			varFilePath := vars{
+				"hub_virtual_networks": map[string]any{
+					input.network.Name: input.network,
+				},
+			}.toFile(t)
+			defer func() { _ = os.Remove(varFilePath) }()
+			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+				Upgrade:  true,
+				VarFiles: []string{varFilePath},
+				Logger:   logger.Discard,
+			}, func(t *testing.T, output test_helper.TerraformOutput) {
+				externalRouteTableAssociations := output["subnet_external_route_table_association_map"].(map[string]any)
+				assert.Equal(t, input.expected, externalRouteTableAssociations)
 			})
 		})
 	}

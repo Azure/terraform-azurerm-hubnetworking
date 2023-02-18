@@ -15,7 +15,8 @@ locals {
           use_remote_gateways          = false
         } if k_src != k_dst && v_dst.mesh_peering_enabled
       ] if v_src.mesh_peering_enabled
-  ]) : peerconfig.name => peerconfig }
+    ]) : peerconfig.name => peerconfig
+  }
   # Create a unique set of resource groups to create
   resource_group_data = toset([
     for k, v in var.hub_virtual_networks : {
@@ -42,11 +43,23 @@ locals {
   subnet_external_route_table_association_map = {
     for assoc in flatten([
       for k, v in var.hub_virtual_networks : [
-        for subnet in v.subnets : {
-          name           = "${k}-${subnet.name}"
-          subnet_id      = lookup(local.virtual_networks_modules[k].vnet_subnets_name_id, subnet.name)
+        for subnetName, subnet in v.subnets : {
+          name           = "${k}-${subnetName}"
+          subnet_id      = lookup(local.virtual_networks_modules[k].vnet_subnets_name_id, subnetName)
           route_table_id = subnet.external_route_table_id
         } if subnet.external_route_table_id != null
+      ]
+    ]) : assoc.name => assoc
+  }
+
+  subnet_route_table_association_map = {
+    for assoc in flatten([
+      for k, v in var.hub_virtual_networks : [
+        for subnetName, subnet in v.subnets : {
+          name           = "${k}-${subnetName}"
+          subnet_id      = lookup(local.virtual_networks_modules[k].vnet_subnets_name_id, subnetName)
+          route_table_id = local.hub_routing[k].id
+        } if subnet.assign_generated_route_table
       ]
     ]) : assoc.name => assoc
   }
