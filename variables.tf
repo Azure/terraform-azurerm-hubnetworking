@@ -1,7 +1,6 @@
 variable "hub_virtual_networks" {
   description = "A map of hub virtual networks to create"
   type = map(object({
-    ## As this variable is a map[string]VirtualNetwork, do we need vnet's name here? Would using the key as vnet's name be better?
     name                = string
     address_space       = list(string)
     location            = string
@@ -14,6 +13,7 @@ variable "hub_virtual_networks" {
     mesh_peering_enabled            = optional(bool, true) # peer to other hub networks with this flag enabled?
     resource_group_creation_enabled = optional(bool, true) # use existing RG or create new
     resource_group_lock_enabled     = optional(bool, true) # enable CanNotDelete lock
+    resource_group_lock_name        = optional(string)
     resource_group_tags             = optional(map(string))
     routing_address_space           = optional(list(string), [])
     # used to create route table entries for other hub networks

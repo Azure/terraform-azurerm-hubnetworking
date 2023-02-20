@@ -33,6 +33,9 @@ module "hub_virtual_networks" {
   subnets                                 = try(local.subnets_map[each.key], {})
 }
 
+locals {
+  virtual_networks_modules = { for vnet_name, vnet_module in module.hub_virtual_networks : vnet_name => vnet_module }
+}
 
 resource "azurerm_virtual_network_peering" "hub_peering" {
   for_each = local.hub_peering_map
@@ -67,6 +70,10 @@ resource "azurerm_route_table" "hub_routing" {
       next_hop_in_ip_address = route.value.next_hop_ip_address
     }
   }
+}
+
+locals {
+  hub_routing = azurerm_route_table.hub_routing
 }
 
 resource "azurerm_subnet_route_table_association" "hub_routing_creat" {
