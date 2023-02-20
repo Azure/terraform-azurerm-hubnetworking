@@ -7,6 +7,14 @@ resource "azurerm_resource_group" "rg" {
   tags     = each.value.tags
 }
 
+resource "azurerm_management_lock" "rg_lock" {
+  for_each = { for r in local.resource_group_data : r.name => r if r.lock }
+
+  lock_level = "CanNotDelete"
+  name       = coalesce(each.value.lock_name, substr("lock-${each.key}", 0, 90))
+  scope      = azurerm_resource_group.rg[each.key].id
+}
+
 # Module to create virtual networks and subnets
 # Useful outputs:
 # - vnet_id - the resource id of vnet
@@ -90,7 +98,42 @@ resource "azurerm_subnet_route_table_association" "hub_routing_external" {
   subnet_id      = each.value.subnet_id
 }
 
-#module "azure_firewall" {
-#  source = "..."
-#  # TODO
-#}
+resource "azurerm_public_ip" "fw_default_ip_configuration_pip" {
+  for_each = local.fw_default_ip_configuration_pip
+
+  allocation_method   = "Static"
+  location            = each.value.location
+  name                = each.value.name
+  resource_group_name = each.value.resource_group_name
+  ip_version          = each.value.ip_version
+  sku                 = each.value.sku
+  sku_tier            = each.value.sku_tier
+  zones               = each.value.zones
+}
+
+locals {
+  vnet_firewall_default_ip_configuration_public_ip_id = {
+    for vnet_name, pip in azurerm_public_ip.fw_default_ip_configuration_pip : vnet_name => pip.id
+  }
+}
+
+resource "azurerm_firewall" "fw" {
+  for_each = local.firewalls
+
+  location            = module.hub_virtual_networks[each.key].vnet_location
+  name                = each.value.name
+  resource_group_name = var.hub_virtual_networks[each.key].resource_group_name
+  sku_name            = each.value.sku_name
+  sku_tier            = each.value.sku_tier
+
+  ip_configuration {
+    name                 = each.value.default_ip_configuration.name
+    subnet_id            = each.value.default_ip_configuration.subnet_id
+    public_ip_address_id = each.value.public_ip_address_id
+  }
+}
+
+locals {
+  firewall_private_ip = { for vnet_name, fw in azurerm_firewall.fw : vnet_name => fw.ip_configuration[0].private_ip_address }
+}
+

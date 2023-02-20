@@ -35,13 +35,20 @@ type vnet struct {
 	ResourceGroupLockName    string            `json:"resource_group_lock_name"`
 	ResourceGroupCreation    bool              `json:"resource_group_creation_enabled"`
 	RoutingAddressSpace      []string          `json:"routing_address_space"`
+	Firewall                 *firewall         `json:"firewall"`
+	HubRouterIpAddress       *string           `json:"hub_router_ip_address"`
+}
+
+type firewall struct {
+	Name    *string `json:"name"`
+	SkuName string  `json:"sku_name"`
+	SkuTier string  `json:"sku_tier"`
 }
 
 type subnet struct {
 	AddressPrefixes           []string `json:"address_prefixes"`
 	AssignGeneratedRouteTable bool     `json:"assign_generated_route_table""`
 	ExternalRouteTableId      *string  `json:"external_route_table_id"`
-	Name                      string   `json:"name"`
 }
 
 func aSubnet(addressSpace string) subnet {
@@ -61,12 +68,20 @@ func (s subnet) WithExternalRouteTableId(rtId string) subnet {
 }
 
 func aVnet(name string, meshPeering bool) vnet {
+	dummyHubRouterIp := "dummyIp"
 	return vnet{
 		Name:                  name,
+		Location:              "eastus",
 		MeshPeeringEnabled:    meshPeering,
 		Subnets:               make(map[string]subnet, 0),
-		ResourceGroupCreation: true,
+		ResourceGroupCreation: false,
+		HubRouterIpAddress:    &dummyHubRouterIp,
 	}
+}
+
+func (n vnet) withAddressSpace(cidr string) vnet {
+	n.AddressSpace = append(n.AddressSpace, cidr)
+	return n
 }
 
 func (n vnet) withResourceGroupCreation(b bool) vnet {
@@ -94,9 +109,16 @@ func (n vnet) withSubnet(name string, s subnet) vnet {
 	return n
 }
 
-type routeEntry struct {
+func (n vnet) withFirewall(f firewall) vnet {
+	n.Firewall = &f
+	n.HubRouterIpAddress = nil
+	return n
+}
+
+type routeEntryOutput struct {
 	Name             string `mapstructure:"name"`
 	AddressPrefix    string `mapstructure:"address_prefix"`
+	NextHopType      string `mapstructure:"next_hop_type"`
 	NextHopIpAddress string `mapstructure:"next_hop_ip_address"`
 }
 
@@ -179,7 +201,7 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 	inputs := []struct {
 		name     string
 		networks map[string]vnet
-		expected map[string][]routeEntry
+		expected map[string][]routeEntryOutput
 	}{
 		{
 			name: "null routing address should create empty route table",
@@ -187,7 +209,7 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 				"vnet0": aVnet("vnet0", true),
 				"vnet1": aVnet("vnet1", true),
 			},
-			expected: map[string][]routeEntry{
+			expected: map[string][]routeEntryOutput{
 				"vnet0": {},
 				"vnet1": {},
 			},
@@ -198,7 +220,7 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 				"vnet0": aVnet("vnet0", true).withEmptyRoutingAddressSpace(),
 				"vnet1": aVnet("vnet1", true).withEmptyRoutingAddressSpace(),
 			},
-			expected: map[string][]routeEntry{
+			expected: map[string][]routeEntryOutput{
 				"vnet0": {},
 				"vnet1": {},
 			},
@@ -209,11 +231,13 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 				"vnet0": aVnet("vnet0", true),
 				"vnet1": aVnet("vnet1", true).withRoutingAddressSpace("10.0.0.0/16"),
 			},
-			expected: map[string][]routeEntry{
+			expected: map[string][]routeEntryOutput{
 				"vnet0": {
 					{
-						Name:          "vnet1-10.0.0.0/16",
-						AddressPrefix: "10.0.0.0/16",
+						Name:             "vnet1-10.0.0.0/16",
+						AddressPrefix:    "10.0.0.0/16",
+						NextHopType:      "VirtualAppliance",
+						NextHopIpAddress: "dummyIp",
 					},
 				},
 				"vnet1": {},
@@ -222,20 +246,40 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 		{
 			name: "bi-directional route",
 			networks: map[string]vnet{
-				"vnet0": aVnet("vnet0", true).withRoutingAddressSpace("10.0.0.0/16"),
-				"vnet1": aVnet("vnet1", true).withRoutingAddressSpace("10.1.0.0/16"),
+				"vnet0": aVnet("vnet0", true).
+					withRoutingAddressSpace("10.0.0.0/16").
+					withFirewall(firewall{
+						SkuName: "AZFW_VNet",
+						SkuTier: "Basic",
+					}).
+					withSubnet("AzureFirewallSubnet", subnet{
+						AddressPrefixes: []string{"10.0.255.0/24"},
+					}),
+				"vnet1": aVnet("vnet1", true).
+					withRoutingAddressSpace("10.1.0.0/16").
+					withFirewall(firewall{
+						SkuName: "AZFW_VNet",
+						SkuTier: "Basic",
+					}).
+					withSubnet("AzureFirewallSubnet", subnet{
+						AddressPrefixes: []string{"10.0.255.0/24"},
+					}),
 			},
-			expected: map[string][]routeEntry{
+			expected: map[string][]routeEntryOutput{
 				"vnet0": {
 					{
-						Name:          "vnet1-10.1.0.0/16",
-						AddressPrefix: "10.1.0.0/16",
+						Name:             "vnet1-10.1.0.0/16",
+						AddressPrefix:    "10.1.0.0/16",
+						NextHopType:      "VirtualAppliance",
+						NextHopIpAddress: "vnet1-fake-fw-private-ip",
 					},
 				},
 				"vnet1": {
 					{
-						Name:          "vnet0-10.0.0.0/16",
-						AddressPrefix: "10.0.0.0/16",
+						Name:             "vnet0-10.0.0.0/16",
+						AddressPrefix:    "10.0.0.0/16",
+						NextHopType:      "VirtualAppliance",
+						NextHopIpAddress: "vnet0-fake-fw-private-ip",
 					},
 				},
 			},
@@ -254,7 +298,7 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 				VarFiles: []string{varFilePath},
 				Logger:   logger.Discard,
 			}, func(t *testing.T, output test_helper.TerraformOutput) {
-				var actual map[string][]routeEntry
+				var actual map[string][]routeEntryOutput
 				err := mapstructure.Decode(output["route_map"], &actual)
 				require.Nil(t, err)
 				assert.Equal(t, input.expected, actual)
@@ -272,14 +316,16 @@ func TestUnit_SubnetAssignGeneratedRouteTableWouldProvisionGeneratedRouteTableAs
 		{
 			name: "no association to generated route table",
 			network: aVnet("vnet0", false).
+				withAddressSpace("10.0.0.0/16").
 				withSubnet("subnet0", aSubnet("10.0.0.0/24")),
 			expected: map[string]any{},
 		},
 		{
 			name: "association to generated route table",
 			network: aVnet("vnet0", false).
+				withAddressSpace("10.0.0.0/16").
 				withSubnet("subnetAssociatedWithGeneratedRouteTable", aSubnet("10.0.0.0/24").UseGenerateRouteTable()).
-				withSubnet("subnetAssociatedWithExternalRouteTable", aSubnet("10.0.0.0/24").WithExternalRouteTableId("external_route_table_id")),
+				withSubnet("subnetAssociatedWithExternalRouteTable", aSubnet("10.0.1.0/24").WithExternalRouteTableId("external_route_table_id")),
 			expected: map[string]any{
 				"vnet0-subnetAssociatedWithGeneratedRouteTable": map[string]any{
 					"name":           "vnet0-subnetAssociatedWithGeneratedRouteTable",
@@ -319,14 +365,17 @@ func TestUnit_SubnetAssignExternalRouteTableWouldProvisionAssociationToExternalR
 		{
 			name: "no association to external route table",
 			network: aVnet("vnet0", false).
+				withAddressSpace("10.0.0.0/16").
+				withAddressSpace("10.0.0.0/16").
 				withSubnet("subnet0", aSubnet("10.0.0.0/24")),
 			expected: map[string]any{},
 		},
 		{
 			name: "association to external route table",
 			network: aVnet("vnet0", false).
+				withAddressSpace("10.0.0.0/16").
 				withSubnet("subnetAssociatedWithGeneratedRouteTable", aSubnet("10.0.0.0/24").UseGenerateRouteTable()).
-				withSubnet("subnetAssociatedWithExternalRouteTable", aSubnet("10.0.0.0/24").WithExternalRouteTableId("external_route_table_id")),
+				withSubnet("subnetAssociatedWithExternalRouteTable", aSubnet("10.0.1.0/24").WithExternalRouteTableId("external_route_table_id")),
 			expected: map[string]any{
 				"vnet0-subnetAssociatedWithExternalRouteTable": map[string]any{
 					"name":           "vnet0-subnetAssociatedWithExternalRouteTable",
@@ -357,6 +406,136 @@ func TestUnit_SubnetAssignExternalRouteTableWouldProvisionAssociationToExternalR
 	}
 }
 
+func TestUnit_VnetWithFirewallShouldCreatePublicIp(t *testing.T) {
+	inputs := []struct {
+		name     string
+		network  vnet
+		expected map[string]any
+	}{
+		{
+			name: "vnet without firewall should not create public ip",
+			network: aVnet("vnet", false).
+				withResourceGroupName("rg0").
+				withAddressSpace("10.0.0.0/16").
+				withSubnet("AzureFirewallSubnet", subnet{
+					AddressPrefixes:           []string{"10.0.255.0/24"},
+					AssignGeneratedRouteTable: false,
+					ExternalRouteTableId:      nil,
+				}),
+			expected: map[string]any{},
+		},
+		{
+			name: "vnet firewall should create public ip",
+			network: aVnet("vnet", false).
+				withResourceGroupName("rg0").
+				withAddressSpace("10.0.0.0/16").
+				withSubnet("AzureFirewallSubnet", subnet{
+					AddressPrefixes:           []string{"10.0.255.0/24"},
+					AssignGeneratedRouteTable: false,
+					ExternalRouteTableId:      nil,
+				}).
+				withFirewall(firewall{
+					SkuName: "AZFW_VNet",
+					SkuTier: "Basic",
+				}),
+			expected: map[string]any{
+				"vnet": map[string]any{
+					"location":            "eastus",
+					"name":                "vnet-fw-default-ip-configuration-pip",
+					"resource_group_name": "rg0",
+					"ip_version":          "IPv4",
+					"sku":                 "Basic",
+					"sku_tier":            "Regional",
+					"zones":               nil,
+				},
+			},
+		},
+	}
+
+	for i := 0; i < len(inputs); i++ {
+		input := inputs[i]
+		t.Run(input.name, func(t *testing.T) {
+			varFilePath := vars{
+				"hub_virtual_networks": map[string]any{
+					input.network.Name: input.network,
+				},
+			}.toFile(t)
+			defer func() { _ = os.Remove(varFilePath) }()
+			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+				Upgrade:  true,
+				VarFiles: []string{varFilePath},
+				Logger:   logger.Discard,
+			}, func(t *testing.T, output test_helper.TerraformOutput) {
+				pips := output["fw_default_ip_configuration_pip"]
+				assert.Equal(t, input.expected, pips)
+			})
+		})
+	}
+}
+
+func TestUnit_VnetWithFirewallShouldCreateFirewall(t *testing.T) {
+	inputs := []struct {
+		name     string
+		network  vnet
+		expected map[string]any
+	}{
+		{
+			name: "vnet without firewall should not create firewall",
+			network: aVnet("vnet", false).
+				withResourceGroupName("rg0").
+				withAddressSpace("10.0.0.0/16"),
+			expected: map[string]any{},
+		},
+		{
+			name: "vnet firewall should create firewall",
+			network: aVnet("vnet", false).
+				withResourceGroupName("rg0").
+				withAddressSpace("10.0.0.0/16").
+				withSubnet("AzureFirewallSubnet", subnet{
+					AddressPrefixes:           []string{"10.0.255.0/24"},
+					AssignGeneratedRouteTable: false,
+					ExternalRouteTableId:      nil,
+				}).
+				withFirewall(firewall{
+					SkuName: "AZFW_VNet",
+					SkuTier: "Basic",
+				}),
+			expected: map[string]any{
+				"vnet": map[string]any{
+					"name":     "vnet_firewall",
+					"sku_name": "AZFW_VNet",
+					"sku_tier": "Basic",
+					"default_ip_configuration": map[string]any{
+						"name":                 "default",
+						"subnet_id":            "AzureFirewallSubnet_id",
+						"public_ip_address_id": "vnet_fw_pip_id",
+					},
+				},
+			},
+		},
+	}
+
+	for i := 0; i < len(inputs); i++ {
+		input := inputs[i]
+		t.Run(input.name, func(t *testing.T) {
+			varFilePath := vars{
+				"hub_virtual_networks": map[string]any{
+					input.network.Name: input.network,
+				},
+			}.toFile(t)
+			defer func() { _ = os.Remove(varFilePath) }()
+			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+				Upgrade:  true,
+				VarFiles: []string{varFilePath},
+				Logger:   logger.Discard,
+			}, func(t *testing.T, output test_helper.TerraformOutput) {
+				firewalls := output["firewalls"]
+				assert.Equal(t, input.expected, firewalls)
+			})
+		})
+	}
+}
+
 func varFile(t *testing.T, inputs map[string]interface{}, path string) string {
 	cleanPath := filepath.Clean(path)
 	varFile, err := os.Create(cleanPath)
@@ -369,4 +548,8 @@ func varFile(t *testing.T, inputs map[string]interface{}, path string) string {
 	varFilePath, err := filepath.Abs(cleanPath)
 	require.Nil(t, err)
 	return varFilePath
+}
+
+func String(s string) *string {
+	return &s
 }
