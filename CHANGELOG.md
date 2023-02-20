@@ -4,6 +4,8 @@
 
 **Merged pull requests:**
 
+- Add unit test to verify `local.hub_peering_map` logic [\#7](https://github.com/Azure/terraform-azure-hubandspoke/pull/7) ([lonegunmanb](https://github.com/lonegunmanb))
+- build\(deps\): bump github.com/hashicorp/go-getter from 1.6.1 to 1.7.0 in /test [\#6](https://github.com/Azure/terraform-azure-hubandspoke/pull/6) ([dependabot[bot]](https://github.com/apps/dependabot))
 - build\(deps\): bump github.com/hashicorp/go-getter/v2 from 2.1.1 to 2.2.0 in /test [\#5](https://github.com/Azure/terraform-azure-hubandspoke/pull/5) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Suggest [\#4](https://github.com/Azure/terraform-azure-hubandspoke/pull/4) ([lonegunmanb](https://github.com/lonegunmanb))
 - Matt ffffff/initial tf [\#1](https://github.com/Azure/terraform-azure-hubandspoke/pull/1) ([matt-FFFFFF](https://github.com/matt-FFFFFF))
