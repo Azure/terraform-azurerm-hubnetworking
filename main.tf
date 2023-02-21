@@ -108,6 +108,7 @@ resource "azurerm_public_ip" "fw_default_ip_configuration_pip" {
   ip_version          = each.value.ip_version
   sku                 = each.value.sku
   sku_tier            = each.value.sku_tier
+  tags                = {}
   zones               = each.value.zones
 }
 
@@ -125,15 +126,18 @@ resource "azurerm_firewall" "fw" {
   resource_group_name = var.hub_virtual_networks[each.key].resource_group_name
   sku_name            = each.value.sku_name
   sku_tier            = each.value.sku_tier
+  tags                = {}
 
   ip_configuration {
     name                 = each.value.default_ip_configuration.name
-    subnet_id            = each.value.default_ip_configuration.subnet_id
     public_ip_address_id = each.value.public_ip_address_id
+    subnet_id            = each.value.default_ip_configuration.subnet_id
   }
 }
 
 locals {
-  firewall_private_ip = { for vnet_name, fw in azurerm_firewall.fw : vnet_name => fw.ip_configuration[0].private_ip_address }
+  firewall_private_ip = {
+    for vnet_name, fw in azurerm_firewall.fw : vnet_name => fw.ip_configuration[0].private_ip_address
+  }
 }
 

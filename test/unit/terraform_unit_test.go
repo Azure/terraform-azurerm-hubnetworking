@@ -47,7 +47,7 @@ type firewall struct {
 
 type subnet struct {
 	AddressPrefixes           []string `json:"address_prefixes"`
-	AssignGeneratedRouteTable bool     `json:"assign_generated_route_table""`
+	AssignGeneratedRouteTable bool     `json:"assign_generated_route_table"`
 	ExternalRouteTableId      *string  `json:"external_route_table_id"`
 }
 

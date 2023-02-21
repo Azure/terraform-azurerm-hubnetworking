@@ -10,7 +10,17 @@ locals {
     }
     } if vnet.firewall != null
   }
-  # Logic to determine the number of peerings to create for all hub networks with mesh_peering enabled.
+  fw_default_ip_configuration_pip = {
+    for vnet_name, vnet in var.hub_virtual_networks : vnet_name => {
+      location            = local.virtual_networks_modules[vnet_name].vnet_location
+      name                = coalesce(vnet.firewall.name, "${vnet_name}-fw-default-ip-configuration-pip")
+      resource_group_name = vnet.resource_group_name
+      ip_version          = try(vnet.firewall.default_ip_configuration.public_ip_config.ip_version, "IPv4")
+      sku                 = try(vnet.firewall.default_ip_configuration.public_ip_config.sku, "Basic")
+      sku_tier            = try(vnet.firewall.default_ip_configuration.public_ip_config.sku_tier, "Regional")
+      zones               = try(vnet.firewall.default_ip_configuration.public_ip_config.zones, null)
+    } if vnet.firewall != null
+  }
   hub_peering_map = {
     for peerconfig in flatten([
       for k_src, v_src in var.hub_virtual_networks :
@@ -28,18 +38,6 @@ locals {
       ] if v_src.mesh_peering_enabled
     ]) : peerconfig.name => peerconfig
   }
-  fw_default_ip_configuration_pip = {
-    for vnet_name, vnet in var.hub_virtual_networks : vnet_name => {
-      location            = local.virtual_networks_modules[vnet_name].vnet_location
-      name                = coalesce(vnet.firewall.name, "${vnet_name}-fw-default-ip-configuration-pip")
-      resource_group_name = vnet.resource_group_name
-      ip_version          = try(vnet.firewall.default_ip_configuration.public_ip_config.ip_version, "IPv4")
-      sku                 = try(vnet.firewall.default_ip_configuration.public_ip_config.sku, "Basic")
-      sku_tier            = try(vnet.firewall.default_ip_configuration.public_ip_config.sku_tier, "Regional")
-      zones               = try(vnet.firewall.default_ip_configuration.public_ip_config.zones, null)
-    } if vnet.firewall != null
-  }
-  # Create a unique set of resource groups to create
   resource_group_data = toset([
     for k, v in var.hub_virtual_networks : {
       name      = v.resource_group_name
@@ -83,7 +81,6 @@ locals {
       ]
     ]) : assoc.name => assoc
   }
-
   subnets_map = {
     for k, v in var.hub_virtual_networks : k => {
       for subnetKey, subnet in v.subnets : subnetKey => {
