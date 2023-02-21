@@ -155,7 +155,7 @@ func TestUnit_VnetWithMeshPeeringShouldAppearInHubPeeringMap(t *testing.T) {
 		t.Run(strconv.Itoa(i.expectedPeeringCount), func(t *testing.T) {
 			varFilePath := i.vars.toFile(t)
 			defer func() { _ = os.Remove(varFilePath) }()
-			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+			test_helper.RunUnitTest(t, "../../", "unit-fixture", terraform.Options{
 				Upgrade:  true,
 				VarFiles: []string{varFilePath},
 				Logger:   logger.Discard,
@@ -185,7 +185,7 @@ func TestUnit_VnetWithResourceGroupCreationWouldBeGatheredInResourceGroupData(t 
 		},
 	}.toFile(t)
 	defer func() { _ = os.Remove(varFilePath) }()
-	test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+	test_helper.RunUnitTest(t, "../../", "unit-fixture", terraform.Options{
 		Upgrade:  true,
 		VarFiles: []string{varFilePath},
 		Logger:   logger.Discard,
@@ -293,7 +293,7 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 				"hub_virtual_networks": input.networks,
 			}.toFile(t)
 			defer func() { _ = os.Remove(varFilePath) }()
-			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+			test_helper.RunUnitTest(t, "../../", "unit-fixture", terraform.Options{
 				Upgrade:  true,
 				VarFiles: []string{varFilePath},
 				Logger:   logger.Discard,
@@ -344,7 +344,7 @@ func TestUnit_SubnetAssignGeneratedRouteTableWouldProvisionGeneratedRouteTableAs
 				},
 			}.toFile(t)
 			defer func() { _ = os.Remove(varFilePath) }()
-			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+			test_helper.RunUnitTest(t, "../../", "unit-fixture", terraform.Options{
 				Upgrade:  true,
 				VarFiles: []string{varFilePath},
 				Logger:   logger.Discard,
@@ -394,7 +394,7 @@ func TestUnit_SubnetAssignExternalRouteTableWouldProvisionAssociationToExternalR
 				},
 			}.toFile(t)
 			defer func() { _ = os.Remove(varFilePath) }()
-			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+			test_helper.RunUnitTest(t, "../../", "unit-fixture", terraform.Options{
 				Upgrade:  true,
 				VarFiles: []string{varFilePath},
 				Logger:   logger.Discard,
@@ -461,7 +461,7 @@ func TestUnit_VnetWithFirewallShouldCreatePublicIp(t *testing.T) {
 				},
 			}.toFile(t)
 			defer func() { _ = os.Remove(varFilePath) }()
-			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+			test_helper.RunUnitTest(t, "../../", "unit-fixture", terraform.Options{
 				Upgrade:  true,
 				VarFiles: []string{varFilePath},
 				Logger:   logger.Discard,
@@ -524,7 +524,7 @@ func TestUnit_VnetWithFirewallShouldCreateFirewall(t *testing.T) {
 				},
 			}.toFile(t)
 			defer func() { _ = os.Remove(varFilePath) }()
-			test_helper.RunE2ETest(t, "../../", "unit-fixture", terraform.Options{
+			test_helper.RunUnitTest(t, "../../", "unit-fixture", terraform.Options{
 				Upgrade:  true,
 				VarFiles: []string{varFilePath},
 				Logger:   logger.Discard,
@@ -548,8 +548,4 @@ func varFile(t *testing.T, inputs map[string]interface{}, path string) string {
 	varFilePath, err := filepath.Abs(cleanPath)
 	require.Nil(t, err)
 	return varFilePath
-}
-
-func String(s string) *string {
-	return &s
 }
