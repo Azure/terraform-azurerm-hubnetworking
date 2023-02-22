@@ -28,7 +28,7 @@ variable "hub_virtual_networks" {
       next_hop_type  = string # Possible values: Internet, VirtualAppliance, VirtualNetworkGateway, VnetLocal, None
 
       has_bgp_override    = optional(bool, false)
-      next_hop_ip_address = optional(string, "") # only required if next_hop_type is VirtualAppliance
+      next_hop_ip_address = optional(string) # only required if next_hop_type is VirtualAppliance
     })), {})
 
     subnets = optional(map(object(

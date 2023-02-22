@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	test_helper "github.com/Azure/terraform-module-test-helper"
+	"github.com/ahmetb/go-linq/v3"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/mitchellh/mapstructure"
@@ -25,18 +26,26 @@ func (v vars) toFile(t *testing.T) string {
 }
 
 type vnet struct {
-	Name                     string            `json:"name"`
-	MeshPeeringEnabled       bool              `json:"mesh_peering_enabled"`
-	Subnets                  map[string]subnet `json:"subnets"`
-	AddressSpace             []string          `json:"address_space"`
-	ResourceGroupName        string            `json:"resource_group_name"`
-	Location                 string            `json:"location"`
-	ResourceGroupLockEnabled bool              `json:"resource_group_lock_enabled"`
-	ResourceGroupLockName    string            `json:"resource_group_lock_name"`
-	ResourceGroupCreation    bool              `json:"resource_group_creation_enabled"`
-	RoutingAddressSpace      []string          `json:"routing_address_space"`
-	Firewall                 *firewall         `json:"firewall"`
-	HubRouterIpAddress       *string           `json:"hub_router_ip_address"`
+	Name                     string                `json:"name"`
+	MeshPeeringEnabled       bool                  `json:"mesh_peering_enabled"`
+	Subnets                  map[string]subnet     `json:"subnets"`
+	AddressSpace             []string              `json:"address_space"`
+	ResourceGroupName        string                `json:"resource_group_name"`
+	Location                 string                `json:"location"`
+	ResourceGroupLockEnabled bool                  `json:"resource_group_lock_enabled"`
+	ResourceGroupLockName    string                `json:"resource_group_lock_name"`
+	ResourceGroupCreation    bool                  `json:"resource_group_creation_enabled"`
+	RoutingAddressSpace      []string              `json:"routing_address_space"`
+	Firewall                 *firewall             `json:"firewall"`
+	HubRouterIpAddress       *string               `json:"hub_router_ip_address"`
+	Routes                   map[string]routeEntry `json:"route_table_entries"`
+}
+
+type routeEntry struct {
+	Name             string  `json:"name"`
+	AddressPrefix    string  `json:"address_prefix"`
+	NextHopType      string  `json:"next_hop_type"`
+	NextHopIpAddress *string `json:"next_hop_ip_address"`
 }
 
 type firewall struct {
@@ -115,11 +124,19 @@ func (n vnet) withFirewall(f firewall) vnet {
 	return n
 }
 
+func (n vnet) withRouteEntry(r routeEntry) vnet {
+	if n.Routes == nil {
+		n.Routes = make(map[string]routeEntry, 0)
+	}
+	n.Routes[r.Name] = r
+	return n
+}
+
 type routeEntryOutput struct {
-	Name             string `mapstructure:"name"`
-	AddressPrefix    string `mapstructure:"address_prefix"`
-	NextHopType      string `mapstructure:"next_hop_type"`
-	NextHopIpAddress string `mapstructure:"next_hop_ip_address"`
+	Name             string  `mapstructure:"name"`
+	AddressPrefix    string  `mapstructure:"address_prefix"`
+	NextHopType      string  `mapstructure:"next_hop_type"`
+	NextHopIpAddress *string `mapstructure:"next_hop_ip_address"`
 }
 
 func TestUnit_VnetWithMeshPeeringShouldAppearInHubPeeringMap(t *testing.T) {
@@ -237,7 +254,7 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 						Name:             "vnet1-10.0.0.0/16",
 						AddressPrefix:    "10.0.0.0/16",
 						NextHopType:      "VirtualAppliance",
-						NextHopIpAddress: "dummyIp",
+						NextHopIpAddress: String("dummyIp"),
 					},
 				},
 				"vnet1": {},
@@ -271,7 +288,7 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 						Name:             "vnet1-10.1.0.0/16",
 						AddressPrefix:    "10.1.0.0/16",
 						NextHopType:      "VirtualAppliance",
-						NextHopIpAddress: "vnet1-fake-fw-private-ip",
+						NextHopIpAddress: String("vnet1-fake-fw-private-ip"),
 					},
 				},
 				"vnet1": {
@@ -279,7 +296,7 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 						Name:             "vnet0-10.0.0.0/16",
 						AddressPrefix:    "10.0.0.0/16",
 						NextHopType:      "VirtualAppliance",
-						NextHopIpAddress: "vnet0-fake-fw-private-ip",
+						NextHopIpAddress: String("vnet0-fake-fw-private-ip"),
 					},
 				},
 			},
@@ -300,6 +317,126 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 			}, func(t *testing.T, output test_helper.TerraformOutput) {
 				var actual map[string][]routeEntryOutput
 				err := mapstructure.Decode(output["route_map"], &actual)
+				sortRouteEntryOutputs(actual)
+				sortRouteEntryOutputs(input.expected)
+				require.Nil(t, err)
+				assert.Equal(t, input.expected, actual)
+			})
+		})
+	}
+}
+
+func TestUnit_VnetWithInputRouteEntriesWouldProvisionRouteEntries(t *testing.T) {
+	inputs := []struct {
+		name     string
+		networks map[string]vnet
+		expected map[string][]routeEntryOutput
+	}{
+		{
+			name: "null routing address should create empty route table",
+			networks: map[string]vnet{
+				"vnet0": aVnet("vnet0", true).withRouteEntry(routeEntry{
+					Name:          "no_internet",
+					AddressPrefix: "0.0.0.0/0",
+					NextHopType:   "None",
+				}).withRouteEntry(routeEntry{
+					Name:          "intranet",
+					AddressPrefix: "10.0.0.0/16",
+					NextHopType:   "VnetLocal",
+				}),
+			},
+			expected: map[string][]routeEntryOutput{
+				"vnet0": {
+					routeEntryOutput{
+						Name:          "intranet",
+						AddressPrefix: "10.0.0.0/16",
+						NextHopType:   "VnetLocal",
+					},
+					routeEntryOutput{
+						Name:          "no_internet",
+						AddressPrefix: "0.0.0.0/0",
+						NextHopType:   "None",
+					},
+				},
+			},
+		},
+		{
+			name: "bi-directional route",
+			networks: map[string]vnet{
+				"vnet0": aVnet("vnet0", true).
+					withRoutingAddressSpace("10.0.0.0/16").
+					withFirewall(firewall{
+						SkuName: "AZFW_VNet",
+						SkuTier: "Basic",
+					}).
+					withSubnet("AzureFirewallSubnet", subnet{
+						AddressPrefixes: []string{"10.0.255.0/24"},
+					}).withRouteEntry(routeEntry{
+					Name:          "no_internet",
+					AddressPrefix: "0.0.0.0/0",
+					NextHopType:   "None",
+				}).withRouteEntry(routeEntry{
+					Name:          "intranet",
+					AddressPrefix: "10.0.0.0/16",
+					NextHopType:   "VnetLocal",
+				}),
+				"vnet1": aVnet("vnet1", true).
+					withRoutingAddressSpace("10.1.0.0/16").
+					withFirewall(firewall{
+						SkuName: "AZFW_VNet",
+						SkuTier: "Basic",
+					}).
+					withSubnet("AzureFirewallSubnet", subnet{
+						AddressPrefixes: []string{"10.0.255.0/24"},
+					}),
+			},
+			expected: map[string][]routeEntryOutput{
+				"vnet0": {
+					{
+						Name:             "vnet1-10.1.0.0/16",
+						AddressPrefix:    "10.1.0.0/16",
+						NextHopType:      "VirtualAppliance",
+						NextHopIpAddress: String("vnet1-fake-fw-private-ip"),
+					},
+					{
+						Name:          "intranet",
+						AddressPrefix: "10.0.0.0/16",
+						NextHopType:   "VnetLocal",
+					},
+					{
+						Name:          "no_internet",
+						AddressPrefix: "0.0.0.0/0",
+						NextHopType:   "None",
+					},
+				},
+				"vnet1": {
+					{
+						Name:             "vnet0-10.0.0.0/16",
+						AddressPrefix:    "10.0.0.0/16",
+						NextHopType:      "VirtualAppliance",
+						NextHopIpAddress: String("vnet0-fake-fw-private-ip"),
+					},
+				},
+			},
+		},
+	}
+
+	for i := 0; i < len(inputs); i++ {
+		input := inputs[i]
+		t.Run(input.name, func(t *testing.T) {
+			varFilePath := vars{
+				"hub_virtual_networks": input.networks,
+			}.toFile(t)
+			defer func() { _ = os.Remove(varFilePath) }()
+			test_helper.RunUnitTest(t, "../../", "unit-fixture", terraform.Options{
+				Upgrade:  true,
+				VarFiles: []string{varFilePath},
+				Logger:   logger.Discard,
+			}, func(t *testing.T, output test_helper.TerraformOutput) {
+				var actual map[string][]routeEntryOutput
+				err := mapstructure.Decode(output["route_map"], &actual)
+				sortRouteEntryOutputs(actual)
+				sortRouteEntryOutputs(input.expected)
 				require.Nil(t, err)
 				assert.Equal(t, input.expected, actual)
 			})
@@ -548,4 +685,16 @@ func varFile(t *testing.T, inputs map[string]interface{}, path string) string {
 	varFilePath, err := filepath.Abs(cleanPath)
 	require.Nil(t, err)
 	return varFilePath
+}
+
+func String(s string) *string {
+	return &s
+}
+
+func sortRouteEntryOutputs(m map[string][]routeEntryOutput) {
+	for _, routes := range m {
+		linq.From(routes).Sort(func(i, j interface{}) bool {
+			return strings.Compare(i.(routeEntryOutput).Name, j.(routeEntryOutput).Name) < 0
+		}).ToSlice(&routes)
+	}
 }

@@ -48,7 +48,8 @@ locals {
     } if v.resource_group_creation_enabled
   ])
   route_map = {
-    for k_src, v_src in var.hub_virtual_networks : k_src => flatten([
+    for k_src, v_src in var.hub_virtual_networks : k_src => distinct(concat(flatten([
+      # Generated routes for hub mesh
       for k_dst, v_dst in var.hub_virtual_networks : [
         for cidr in v_dst.routing_address_space : {
           name                = "${k_dst}-${cidr}"
@@ -57,7 +58,13 @@ locals {
           next_hop_ip_address = try(local.firewall_private_ip[k_dst], v_dst.hub_router_ip_address)
         }
       ] if k_src != k_dst && v_dst.mesh_peering_enabled && can(v_dst.routing_address_space[0])
-    ]) if v_src.mesh_peering_enabled
+      # routes set by users
+      ]), [for route_name, route in v_src.route_table_entries : {
+      name                = route.name
+      address_prefix      = route.address_prefix
+      next_hop_type       = route.next_hop_type
+      next_hop_ip_address = route.next_hop_ip_address
+    }])) if v_src.mesh_peering_enabled
   }
   subnet_external_route_table_association_map = {
     for assoc in flatten([
