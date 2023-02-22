@@ -124,9 +124,14 @@ resource "azurerm_firewall" "fw" {
   location            = module.hub_virtual_networks[each.key].vnet_location
   name                = each.value.name
   resource_group_name = var.hub_virtual_networks[each.key].resource_group_name
+  dns_servers         = each.value.dns_servers
+  firewall_policy_id  = each.value.firewall_policy_id
+  private_ip_ranges   = each.value.private_ip_ranges
   sku_name            = each.value.sku_name
   sku_tier            = each.value.sku_tier
+  threat_intel_mode   = each.value.threat_intel_mode
   tags                = {}
+  zones               = each.value.zones
 
   ip_configuration {
     name                 = each.value.default_ip_configuration.name

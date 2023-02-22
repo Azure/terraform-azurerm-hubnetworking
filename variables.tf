@@ -72,14 +72,15 @@ variable "hub_virtual_networks" {
 
     # TODO: Firewall variables
     firewall = object({
-      sku_name          = string
-      sku_tier          = string
-      name              = optional(string)
-      dns_servers       = optional(list(string))
-      private_ip_ranges = optional(list(string))
-      threat_intel_mode = optional(string, "Alert")
-      zones             = optional(list(string))
-      tags              = optional(map(string))
+      sku_name           = string
+      sku_tier           = string
+      name               = optional(string)
+      dns_servers        = optional(list(string))
+      firewall_policy_id = optional(string)
+      private_ip_ranges  = optional(list(string))
+      threat_intel_mode  = optional(string, "Alert")
+      zones              = optional(list(string))
+      tags               = optional(map(string))
       default_ip_configuration = optional(object({
         name = optional(string)
         public_ip_config = optional(object({
