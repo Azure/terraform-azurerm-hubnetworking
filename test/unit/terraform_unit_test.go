@@ -317,10 +317,10 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 			}, func(t *testing.T, output test_helper.TerraformOutput) {
 				var actual map[string][]routeEntryOutput
 				err := mapstructure.Decode(output["route_map"], &actual)
-				sortRouteEntryOutputs(actual)
-				sortRouteEntryOutputs(input.expected)
+				actual = sortRouteEntryOutputs(actual)
+				expected := sortRouteEntryOutputs(input.expected)
 				require.Nil(t, err)
-				assert.Equal(t, input.expected, actual)
+				assert.Equal(t, expected, actual)
 			})
 		})
 	}
@@ -435,10 +435,10 @@ func TestUnit_VnetWithInputRouteEntriesWouldProvisionRouteEntries(t *testing.T) 
 			}, func(t *testing.T, output test_helper.TerraformOutput) {
 				var actual map[string][]routeEntryOutput
 				err := mapstructure.Decode(output["route_map"], &actual)
-				sortRouteEntryOutputs(actual)
-				sortRouteEntryOutputs(input.expected)
+				actual = sortRouteEntryOutputs(actual)
+				expected := sortRouteEntryOutputs(input.expected)
 				require.Nil(t, err)
-				assert.Equal(t, input.expected, actual)
+				assert.Equal(t, expected, actual)
 			})
 		})
 	}
@@ -691,10 +691,18 @@ func String(s string) *string {
 	return &s
 }
 
-func sortRouteEntryOutputs(m map[string][]routeEntryOutput) {
-	for _, routes := range m {
+func sortRouteEntryOutputs(m map[string][]routeEntryOutput) map[string][]routeEntryOutput {
+	r := make(map[string][]routeEntryOutput, 0)
+	linq.From(m).Select(func(pair interface{}) interface{} {
+		routes := pair.(linq.KeyValue).Value.([]routeEntryOutput)
+		var sortedRoutes []routeEntryOutput
 		linq.From(routes).Sort(func(i, j interface{}) bool {
 			return strings.Compare(i.(routeEntryOutput).Name, j.(routeEntryOutput).Name) < 0
-		}).ToSlice(&routes)
-	}
+		}).ToSlice(&sortedRoutes)
+		return linq.KeyValue{
+			Key:   pair.(linq.KeyValue).Key,
+			Value: sortedRoutes,
+		}
+	}).ToMap(&r)
+	return r
 }
