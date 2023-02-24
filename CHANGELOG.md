@@ -4,6 +4,7 @@
 
 **Merged pull requests:**
 
+- Add support for azure firewall [\#10](https://github.com/Azure/terraform-azure-hubandspoke/pull/10) ([lonegunmanb](https://github.com/lonegunmanb))
 - Add unit test to verify `local.hub_peering_map` logic [\#7](https://github.com/Azure/terraform-azure-hubandspoke/pull/7) ([lonegunmanb](https://github.com/lonegunmanb))
 - build\(deps\): bump github.com/hashicorp/go-getter from 1.6.1 to 1.7.0 in /test [\#6](https://github.com/Azure/terraform-azure-hubandspoke/pull/6) ([dependabot[bot]](https://github.com/apps/dependabot))
 - build\(deps\): bump github.com/hashicorp/go-getter/v2 from 2.1.1 to 2.2.0 in /test [\#5](https://github.com/Azure/terraform-azure-hubandspoke/pull/5) ([dependabot[bot]](https://github.com/apps/dependabot))
