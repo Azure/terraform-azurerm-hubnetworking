@@ -3,7 +3,8 @@ module github.com/Azure/terraform-azure-hubandspoke/test
 go 1.19
 
 require (
-	github.com/Azure/terraform-module-test-helper v0.9.1
+	github.com/Azure/terraform-module-test-helper v0.9.2-0.20230221054038-98bfb4448c9a
+	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/gruntwork-io/terratest v0.41.10
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/stretchr/testify v1.8.1
@@ -16,7 +17,6 @@ require (
 	cloud.google.com/go/iam v0.5.0 // indirect
 	cloud.google.com/go/storage v1.27.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.122 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect

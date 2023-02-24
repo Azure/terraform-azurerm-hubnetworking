@@ -1,5 +1,26 @@
 locals {
-  # Logic to determine the number of peerings to create for all hub networks with mesh_peering enabled.
+  firewalls = { for vnet_name, vnet in var.hub_virtual_networks : vnet_name => {
+    name     = coalesce(vnet.firewall.name, "${vnet_name}_firewall")
+    sku_name = vnet.firewall.sku_name
+    sku_tier = vnet.firewall.sku_tier
+    default_ip_configuration = {
+      name                 = try(coalesce(vnet.firewall.default_ip_configuration.name, "default"), "default")
+      subnet_id            = local.virtual_networks_modules[vnet_name].vnet_subnets_name_id["AzureFirewallSubnet"]
+      public_ip_address_id = local.vnet_firewall_default_ip_configuration_public_ip_id[vnet_name]
+    }
+    } if vnet.firewall != null
+  }
+  fw_default_ip_configuration_pip = {
+    for vnet_name, vnet in var.hub_virtual_networks : vnet_name => {
+      location            = local.virtual_networks_modules[vnet_name].vnet_location
+      name                = coalesce(vnet.firewall.name, "${vnet_name}-fw-default-ip-configuration-pip")
+      resource_group_name = vnet.resource_group_name
+      ip_version          = try(vnet.firewall.default_ip_configuration.public_ip_config.ip_version, "IPv4")
+      sku                 = try(vnet.firewall.default_ip_configuration.public_ip_config.sku, "Basic")
+      sku_tier            = try(vnet.firewall.default_ip_configuration.public_ip_config.sku_tier, "Regional")
+      zones               = try(vnet.firewall.default_ip_configuration.public_ip_config.zones, null)
+    } if vnet.firewall != null
+  }
   hub_peering_map = {
     for peerconfig in flatten([
       for k_src, v_src in var.hub_virtual_networks :
@@ -17,7 +38,6 @@ locals {
       ] if v_src.mesh_peering_enabled
     ]) : peerconfig.name => peerconfig
   }
-  # Create a unique set of resource groups to create
   resource_group_data = toset([
     for k, v in var.hub_virtual_networks : {
       name      = v.resource_group_name
@@ -28,17 +48,23 @@ locals {
     } if v.resource_group_creation_enabled
   ])
   route_map = {
-    for k_src, v_src in var.hub_virtual_networks : k_src => flatten([
+    for k_src, v_src in var.hub_virtual_networks : k_src => distinct(concat(flatten([
+      # Generated routes for hub mesh
       for k_dst, v_dst in var.hub_virtual_networks : [
         for cidr in v_dst.routing_address_space : {
           name                = "${k_dst}-${cidr}"
           address_prefix      = cidr
           next_hop_type       = "VirtualAppliance"
-          next_hop_ip_address = v_dst.hub_router_ip_address
-          # TODO change to support Azure Firewall when module is implemented
+          next_hop_ip_address = try(local.firewall_private_ip[k_dst], v_dst.hub_router_ip_address)
         }
       ] if k_src != k_dst && v_dst.mesh_peering_enabled && can(v_dst.routing_address_space[0])
-    ]) if v_src.mesh_peering_enabled
+      # routes set by users
+      ]), [for route_name, route in v_src.route_table_entries : {
+      name                = route.name
+      address_prefix      = route.address_prefix
+      next_hop_type       = route.next_hop_type
+      next_hop_ip_address = route.next_hop_ip_address
+    }])) if v_src.mesh_peering_enabled
   }
   subnet_external_route_table_association_map = {
     for assoc in flatten([
@@ -51,7 +77,6 @@ locals {
       ]
     ]) : assoc.name => assoc
   }
-
   subnet_route_table_association_map = {
     for assoc in flatten([
       for k, v in var.hub_virtual_networks : [
@@ -63,7 +88,6 @@ locals {
       ]
     ]) : assoc.name => assoc
   }
-
   subnets_map = {
     for k, v in var.hub_virtual_networks : k => {
       for subnetKey, subnet in v.subnets : subnetKey => {

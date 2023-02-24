@@ -17,7 +17,7 @@ variable "hub_virtual_networks" {
     resource_group_tags             = optional(map(string))
     routing_address_space           = optional(list(string), [])
     # used to create route table entries for other hub networks
-    hub_router_ip_address = optional(string, "")
+    hub_router_ip_address = optional(string)
     # Optional if using 3rd party NVAs, if not specified will use Azure Firewall address if enabled
     tags = optional(map(string), {})
 
@@ -28,7 +28,7 @@ variable "hub_virtual_networks" {
       next_hop_type  = string # Possible values: Internet, VirtualAppliance, VirtualNetworkGateway, VnetLocal, None
 
       has_bgp_override    = optional(bool, false)
-      next_hop_ip_address = optional(string, "") # only required if next_hop_type is VirtualAppliance
+      next_hop_ip_address = optional(string) # only required if next_hop_type is VirtualAppliance
     })), {})
 
     subnets = optional(map(object(
@@ -71,6 +71,27 @@ variable "hub_virtual_networks" {
     )), {})
 
     # TODO: Firewall variables
+    firewall = object({
+      sku_name           = string
+      sku_tier           = string
+      name               = optional(string)
+      dns_servers        = optional(list(string))
+      firewall_policy_id = optional(string)
+      private_ip_ranges  = optional(list(string))
+      threat_intel_mode  = optional(string, "Alert")
+      zones              = optional(list(string))
+      tags               = optional(map(string))
+      default_ip_configuration = optional(object({
+        name = optional(string)
+        public_ip_config = optional(object({
+          name       = optional(set(string))
+          zones      = optional(set(string))
+          ip_version = optional(string)
+          sku        = optional(string, "Basic")
+          sku_tier   = optional(string, "Regional")
+        }))
+      }))
+    })
 
     # TODO: ERGW variables
 
@@ -81,5 +102,17 @@ variable "hub_virtual_networks" {
   validation {
     condition     = alltrue([for k, v in var.hub_virtual_networks : k == v.name])
     error_message = "`var.hub_virtual_networks`'s key must be equal to value's `name`."
+  }
+  validation {
+    condition     = alltrue([for rg_name, vnets in { for k, v in var.hub_virtual_networks : v.resource_group_name => v... if v.resource_group_creation_enabled } : length(vnets) == 1])
+    error_message = "`resource_group_name` must be unique when `resource_group_creation_enabled` is true."
+  }
+  validation {
+    condition     = alltrue([for k, v in var.hub_virtual_networks : v.firewall == null ? true : contains(keys(v.subnets), "AzureFirewallSubnet")])
+    error_message = "Virtual network that using Azure Firewall as NVA must contains a subnet named `AzureFirewallSubnet` and the subnet mask must be at least a /26."
+  }
+  validation {
+    condition     = alltrue([for k, v in var.hub_virtual_networks : v.firewall != null || v.hub_router_ip_address != null])
+    error_message = "One of `firewall` and `hub_router_ip_address` must be set."
   }
 }

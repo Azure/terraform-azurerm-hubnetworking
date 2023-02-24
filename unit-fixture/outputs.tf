@@ -17,3 +17,11 @@ output "subnet_route_table_association_map" {
 output "subnet_external_route_table_association_map" {
   value = local.subnet_external_route_table_association_map
 }
+
+output "fw_default_ip_configuration_pip" {
+  value = local.fw_default_ip_configuration_pip
+}
+
+output "firewalls" {
+  value = local.firewalls
+}
