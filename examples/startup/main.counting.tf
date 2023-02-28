@@ -81,10 +81,10 @@ resource "azurerm_network_interface" "counting" {
 }
 
 resource "azurerm_linux_virtual_machine" "counting" {
-  name                  = "example-machine"
+  name                  = "counting-machine"
   resource_group_name   = azurerm_resource_group.counting.name
   location              = azurerm_resource_group.counting.location
-  size                  = "Standard_F2"
+  size                  = "Standard_B2ms"
   admin_username        = "adminuser"
   network_interface_ids = [
     azurerm_network_interface.counting.id,
@@ -102,8 +102,8 @@ resource "azurerm_linux_virtual_machine" "counting" {
 
   source_image_reference {
     publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-focal"
-    sku       = "20_04-lts"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
     version   = "latest"
   }
 }
