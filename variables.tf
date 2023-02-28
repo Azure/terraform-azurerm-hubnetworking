@@ -2,7 +2,7 @@ variable "hub_virtual_networks" {
   description = "A map of hub virtual networks to create"
   type = map(object({
     name                = string
-    address_space       = list(string)
+    address_spaces      = list(string)
     location            = string
     resource_group_name = string
 
@@ -87,7 +87,6 @@ variable "hub_virtual_networks" {
           name       = optional(set(string))
           zones      = optional(set(string))
           ip_version = optional(string)
-          sku        = optional(string, "Basic")
           sku_tier   = optional(string, "Regional")
         }))
       }))
