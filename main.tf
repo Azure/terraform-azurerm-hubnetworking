@@ -144,7 +144,7 @@ resource "azurerm_firewall" "fw" {
   sku_name            = each.value.sku_name
   sku_tier            = each.value.sku_tier
   dns_servers         = each.value.dns_servers
-  firewall_policy_id  = azurerm_firewall_policy.example.id
+  firewall_policy_id  = each.value.firewall_policy_id
   private_ip_ranges   = each.value.private_ip_ranges
   tags                = each.value.tags
   threat_intel_mode   = each.value.threat_intel_mode
@@ -157,35 +157,8 @@ resource "azurerm_firewall" "fw" {
   }
 }
 
-resource "azurerm_firewall_policy" "example" {
-  name                = "fwpolicy"
-  resource_group_name = "hubandspokedemo-hub-eastus"
-  location            = "eastus"
-  depends_on = [azurerm_resource_group.rg]
-}
-
-resource "azurerm_firewall_policy_rule_collection_group" "example" {
-  name               = "example-fwpolicy-rcg"
-  firewall_policy_id = azurerm_firewall_policy.example.id
-  priority           = 500
-
-  network_rule_collection {
-    name     = "network_rule_collection1"
-    priority = 400
-    action   = "Allow"
-    rule {
-      name                  = "network_rule_collection1_rule1"
-      protocols             = ["Any"]
-      source_addresses      = ["192.168.0.0/16", "10.0.0.0/8"]
-      destination_addresses = ["192.168.0.0/16", "10.0.0.0/8"]
-      destination_ports     = ["1-65535"]
-    }
-  }
-}
-
 locals {
   firewall_private_ip = {
     for vnet_name, fw in azurerm_firewall.fw : vnet_name => fw.ip_configuration[0].private_ip_address
   }
 }
-
