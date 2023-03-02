@@ -54,7 +54,7 @@ locals {
   ])
   route_map = {
     for k_src, v_src in var.hub_virtual_networks : k_src => {
-      routes = flatten([
+      mesh_routes = flatten([
       # Generated routes for hub mesh
       for k_dst, v_dst in var.hub_virtual_networks : [
         for cidr in v_dst.routing_address_space : {
@@ -64,7 +64,7 @@ locals {
           next_hop_ip_address = try(local.firewall_private_ip[k_dst], v_src.hub_router_ip_address)
         }
       ] if k_src != k_dst && v_dst.mesh_peering_enabled && can(v_dst.routing_address_space[0])])
-      extra_routes = toset([ for route_name, route in v_src.route_table_entries : {
+      user_routes = toset([ for route_name, route in v_src.route_table_entries : {
         name                = route.name
         address_prefix      = route.address_prefix
         next_hop_type       = route.next_hop_type

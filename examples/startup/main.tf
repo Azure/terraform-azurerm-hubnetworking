@@ -1,3 +1,14 @@
+locals {
+  regions = toset(["eastus", "eastus2"])
+}
+
+resource "azurerm_resource_group" "hub_rg" {
+  for_each = local.regions
+
+  location = each.value
+  name     = "hubandspokedemo-hub-${each.value}-${random_pet.rand.id}"
+}
+
 resource "random_pet" "rand" {}
 
 module "hub_mesh" {
@@ -7,8 +18,8 @@ module "hub_mesh" {
       name                            = "eastus-hub"
       address_spaces                  = ["10.0.0.0/16"]
       location                        = "eastus"
-      resource_group_name             = "hubandspokedemo-hub-eastus"
-      resource_group_creation_enabled = true
+      resource_group_name             = azurerm_resource_group.hub_rg["eastus"].name
+      resource_group_creation_enabled = false
       resource_group_lock_enabled     = false
       mesh_peering_enabled            = true
       routing_address_space           = ["10.0.0.0/16", "192.168.0.0/24"]
@@ -27,8 +38,8 @@ module "hub_mesh" {
       name                            = "eastus2-hub"
       address_spaces                  = ["10.1.0.0/16"]
       location                        = "eastus2"
-      resource_group_name             = "hubandspokedemo-hub-eastus2"
-      resource_group_creation_enabled = true
+      resource_group_name             = azurerm_resource_group.hub_rg["eastus2"].name
+      resource_group_creation_enabled = false
       resource_group_lock_enabled     = false
       mesh_peering_enabled            = true
       routing_address_space           = ["10.1.0.0/16", "192.168.1.0/24"]
@@ -57,7 +68,7 @@ resource "local_sensitive_file" "private_key" {
 }
 
 resource "azurerm_resource_group" "fwpolicy" {
-  name     = "fwpolicy"
+  name     = "fwpolicy-${random_pet.rand.id}"
   location = "eastus"
 }
 
@@ -86,57 +97,3 @@ resource "azurerm_firewall_policy_rule_collection_group" "allow_internal" {
     }
   }
 }
-
-
-#resource "azurerm_public_ip" "fw" {
-#  name                = "fw-pip"
-#  resource_group_name = module.hub_mesh.resource_groups["hubandspokedemo-hub-eastus2"].name
-#  location            = module.hub_mesh.resource_groups["hubandspokedemo-hub-eastus2"].location
-#  allocation_method   = "Static"
-#}
-#
-#resource "azurerm_network_interface" "fwmachine" {
-#  name                = "fwmachine-nic"
-#  location            = module.hub_mesh.resource_groups["hubandspokedemo-hub-eastus2"].location
-#  resource_group_name = module.hub_mesh.resource_groups["hubandspokedemo-hub-eastus2"].name
-#
-#  ip_configuration {
-#    name                          = "internal"
-#    subnet_id                     = module.hub_mesh.virtual_networks["eastus2-hub"].subnets_name_id["fw"]
-#    private_ip_address_allocation = "Dynamic"
-#    public_ip_address_id          = azurerm_public_ip.fw.id
-#  }
-#}
-#
-#resource "azurerm_linux_virtual_machine" "fw" {
-#  name                  = "fw-machine"
-#  resource_group_name = module.hub_mesh.resource_groups["hubandspokedemo-hub-eastus2"].name
-#  location            = module.hub_mesh.resource_groups["hubandspokedemo-hub-eastus2"].location
-#  size                  = "Standard_F2"
-#  admin_username        = "adminuser"
-#  network_interface_ids = [
-#    azurerm_network_interface.fwmachine.id,
-#  ]
-#
-#  admin_ssh_key {
-#    username   = "adminuser"
-#    public_key = tls_private_key.key.public_key_openssh
-#  }
-#
-#  os_disk {
-#    caching              = "ReadWrite"
-#    storage_account_type = "Standard_LRS"
-#  }
-#
-#  source_image_reference {
-#    publisher = "Canonical"
-#    offer     = "UbuntuServer"
-#    sku       = "16.04-LTS"
-#    version   = "latest"
-#  }
-#}
-#
-#output "fwpip" {
-#  value = azurerm_public_ip.fw.ip_address
-#  depends_on = [azurerm_linux_virtual_machine.fw]
-#}

@@ -66,7 +66,7 @@ resource "azurerm_route_table" "hub_routing" {
 
   location                      = var.hub_virtual_networks[each.key].location
   name                          = "${each.key}-rt"
-  resource_group_name           = azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name
+  resource_group_name           = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name, var.hub_virtual_networks[each.key].resource_group_name)
   disable_bgp_route_propagation = false
   tags                          = {}
 
@@ -76,7 +76,7 @@ resource "azurerm_route_table" "hub_routing" {
     next_hop_type  = "Internet"
   }
   dynamic "route" {
-    for_each = toset(each.value.routes)
+    for_each = toset(each.value.mesh_routes)
 
     content {
       address_prefix         = route.value.address_prefix
@@ -86,7 +86,7 @@ resource "azurerm_route_table" "hub_routing" {
     }
   }
   dynamic "route" {
-    for_each = toset(each.value.extra_routes)
+    for_each = toset(each.value.user_routes)
 
     content {
       address_prefix         = route.value.address_prefix
