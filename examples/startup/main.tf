@@ -62,32 +62,33 @@ resource "local_sensitive_file" "private_key" {
 }
 
 resource "azurerm_resource_group" "fwpolicy" {
-  name     = "fwpolicy-${random_pet.rand.id}"
   location = "eastus"
+  name     = "fwpolicy-${random_pet.rand.id}"
 }
 
 resource "azurerm_firewall_policy" "fwpolicy" {
+  location            = azurerm_resource_group.fwpolicy.location
   name                = "allow-internal"
   resource_group_name = azurerm_resource_group.fwpolicy.name
-  location            = azurerm_resource_group.fwpolicy.location
   sku                 = "Standard"
 }
 
 resource "azurerm_firewall_policy_rule_collection_group" "allow_internal" {
-  name               = "allow-rfc1918"
   firewall_policy_id = azurerm_firewall_policy.fwpolicy.id
+  name               = "allow-rfc1918"
   priority           = 100
 
   network_rule_collection {
     action   = "Allow"
     name     = "rfc1918"
     priority = 100
+
     rule {
+      destination_ports     = ["*"]
       name                  = "rfc1918"
       protocols             = ["Any"]
-      source_addresses      = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
       destination_addresses = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
-      destination_ports     = ["*"]
+      source_addresses      = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
     }
   }
 }

@@ -41,6 +41,7 @@ terraform.rc
 tfmod-scaffold
 scripts
 **/go.sum
+**/go_mod
 
 **/vendor/
 

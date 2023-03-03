@@ -30,19 +30,19 @@ resource "azurerm_route_table" "counting" {
 resource "azurerm_route" "counting_to_hub" {
   address_prefix         = "192.168.0.0/16"
   name                   = "to-hub"
-  next_hop_in_ip_address = module.hub_mesh.virtual_networks["eastus-hub"].hub_router_ip_address
   next_hop_type          = "VirtualAppliance"
   resource_group_name    = azurerm_resource_group.counting.name
   route_table_name       = azurerm_route_table.counting.name
+  next_hop_in_ip_address = module.hub_mesh.virtual_networks["eastus-hub"].hub_router_ip_address
 }
 
 resource "azurerm_route" "counting_to_hub2" {
   address_prefix         = "10.0.0.0/8"
   name                   = "to-hub2"
-  next_hop_in_ip_address = module.hub_mesh.virtual_networks["eastus-hub"].hub_router_ip_address
   next_hop_type          = "VirtualAppliance"
   resource_group_name    = azurerm_resource_group.counting.name
   route_table_name       = azurerm_route_table.counting.name
+  next_hop_in_ip_address = module.hub_mesh.virtual_networks["eastus-hub"].hub_router_ip_address
 }
 
 resource "azurerm_virtual_network_peering" "counting_peering" {
@@ -50,9 +50,9 @@ resource "azurerm_virtual_network_peering" "counting_peering" {
   remote_virtual_network_id    = module.hub_mesh.virtual_networks["eastus-hub"].id
   resource_group_name          = azurerm_resource_group.counting.name
   virtual_network_name         = module.counting_vnet.vnet_name
-  allow_virtual_network_access = true
   allow_forwarded_traffic      = true
   allow_gateway_transit        = false
+  allow_virtual_network_access = true
   use_remote_gateways          = false
 }
 
@@ -61,48 +61,47 @@ resource "azurerm_virtual_network_peering" "counting_peering_back" {
   remote_virtual_network_id    = module.counting_vnet.vnet_id
   resource_group_name          = module.hub_mesh.virtual_networks["eastus-hub"].resource_group_name
   virtual_network_name         = module.hub_mesh.virtual_networks["eastus-hub"].name
-  allow_virtual_network_access = true
   allow_forwarded_traffic      = false
   allow_gateway_transit        = false
+  allow_virtual_network_access = true
   use_remote_gateways          = false
 }
 
 resource "azurerm_network_interface" "counting" {
-  name                = "counting-nic"
   location            = azurerm_resource_group.counting.location
+  name                = "counting-nic"
   resource_group_name = azurerm_resource_group.counting.name
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = module.counting_vnet.vnet_subnets_name_id["counting-subnet"]
     private_ip_address_allocation = "Dynamic"
+    subnet_id                     = module.counting_vnet.vnet_subnets_name_id["counting-subnet"]
   }
 }
 
 resource "azurerm_linux_virtual_machine" "counting" {
   #checkov:skip=CKV_AZURE_50:Only for connectivity test so we use vm extension
-  name                = "counting-machine"
-  resource_group_name = azurerm_resource_group.counting.name
-  location            = azurerm_resource_group.counting.location
-  size                = "Standard_B2ms"
   admin_username      = "adminuser"
+  location            = azurerm_resource_group.counting.location
+  name                = "counting-machine"
   network_interface_ids = [
     azurerm_network_interface.counting.id,
   ]
+  resource_group_name = azurerm_resource_group.counting.name
+  size                = "Standard_B2ms"
 
-  admin_ssh_key {
-    username   = "adminuser"
-    public_key = tls_private_key.key.public_key_openssh
-  }
 
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
-
+  admin_ssh_key {
+    public_key = tls_private_key.key.public_key_openssh
+    username   = "adminuser"
+  }
   source_image_reference {
-    publisher = "Canonical"
     offer     = "0001-com-ubuntu-server-jammy"
+    publisher = "Canonical"
     sku       = "22_04-lts"
     version   = "latest"
   }
@@ -110,14 +109,11 @@ resource "azurerm_linux_virtual_machine" "counting" {
 
 resource "azurerm_virtual_machine_extension" "start_counting" {
   name                 = "start-svc"
-  virtual_machine_id   = azurerm_linux_virtual_machine.counting.id
   publisher            = "Microsoft.Azure.Extensions"
   type                 = "CustomScript"
   type_handler_version = "2.0"
-
-  settings = <<SETTINGS
- {
-  "commandToExecute": "curl -sSL https://get.docker.com/ | sh && sudo docker run -d --restart=always -p 9001:9001 hashicorp/counting-service:0.0.2 && sudo docker run -d --restart=always -p 5678:5678 hashicorp/http-echo -text='hello world'"
- }
-SETTINGS
+  virtual_machine_id   = azurerm_linux_virtual_machine.counting.id
+  settings = jsonencode({
+    commandToExecute = "curl -sSL https://get.docker.com/ | sh && sudo docker run -d --restart=always -p 9001:9001 hashicorp/counting-service:0.0.2 && sudo docker run -d --restart=always -p 5678:5678 hashicorp/http-echo -text='hello world'"
+  })
 }
