@@ -81,9 +81,9 @@ resource "azurerm_network_interface" "counting" {
 
 resource "azurerm_linux_virtual_machine" "counting" {
   #checkov:skip=CKV_AZURE_50:Only for connectivity test so we use vm extension
-  admin_username      = "adminuser"
-  location            = azurerm_resource_group.counting.location
-  name                = "counting-machine"
+  admin_username = "adminuser"
+  location       = azurerm_resource_group.counting.location
+  name           = "counting-machine"
   network_interface_ids = [
     azurerm_network_interface.counting.id,
   ]

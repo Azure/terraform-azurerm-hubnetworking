@@ -8,10 +8,10 @@ module "dashboard_vnet" {
   version = "1.0.0"
 
   resource_group_name = azurerm_resource_group.dashboard.name
-  subnets             = {
+  subnets = {
     dashboard-subnet = {
       address_prefixes = ["192.168.1.0/24"]
-      route_table      = {
+      route_table = {
         id = azurerm_route_table.dashboard.id
       }
     }
@@ -90,14 +90,14 @@ resource "azurerm_network_interface" "dashboard" {
 
 resource "azurerm_linux_virtual_machine" "dashboard" {
   #checkov:skip=CKV_AZURE_50:Only for connectivity test so we use vm extension
-  admin_username        = "adminuser"
-  location              = azurerm_resource_group.dashboard.location
-  name                  = "dashboard-machine"
+  admin_username = "adminuser"
+  location       = azurerm_resource_group.dashboard.location
+  name           = "dashboard-machine"
   network_interface_ids = [
     azurerm_network_interface.dashboard.id,
   ]
-  resource_group_name   = azurerm_resource_group.dashboard.name
-  size                  = "Standard_B2ms"
+  resource_group_name = azurerm_resource_group.dashboard.name
+  size                = "Standard_B2ms"
 
   os_disk {
     caching              = "ReadWrite"
@@ -121,7 +121,7 @@ resource "azurerm_virtual_machine_extension" "start_dashboard" {
   type                 = "CustomScript"
   type_handler_version = "2.0"
   virtual_machine_id   = azurerm_linux_virtual_machine.dashboard.id
-  settings             = jsonencode({
+  settings = jsonencode({
     commandToExecute = "curl -sSL https://get.docker.com/ | sh && sudo docker run -d --restart=always -p 9002:9002 -e COUNTING_SERVICE_URL='http://${azurerm_linux_virtual_machine.counting.private_ip_address}:9001' hashicorp/dashboard-service:0.0.4 && sudo docker run -d --restart=always -p 8080:5678 hpello/tcp-proxy ${azurerm_linux_virtual_machine.counting.private_ip_address} 5678"
   })
 }
