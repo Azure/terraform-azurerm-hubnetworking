@@ -45,7 +45,6 @@ resource "azurerm_route" "dashboard_to_hub2" {
   route_table_name       = azurerm_route_table.dashboard.name
 }
 
-
 resource "azurerm_virtual_network_peering" "dashboard_peering" {
   name                         = "dashboard-peering"
   remote_virtual_network_id    = module.hub_mesh.virtual_networks["eastus2-hub"].id

@@ -129,12 +129,6 @@ resource "azurerm_public_ip" "fw_default_ip_configuration_pip" {
   zones               = each.value.zones
 }
 
-locals {
-  vnet_firewall_default_ip_configuration_public_ip_id = {
-    for vnet_name, pip in azurerm_public_ip.fw_default_ip_configuration_pip : vnet_name => pip.id
-  }
-}
-
 resource "azurerm_subnet" "fw_subnet" {
   for_each = local.firewalls
 

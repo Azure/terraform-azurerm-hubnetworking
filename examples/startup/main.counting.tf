@@ -67,7 +67,6 @@ resource "azurerm_virtual_network_peering" "counting_peering_back" {
   use_remote_gateways          = false
 }
 
-
 resource "azurerm_network_interface" "counting" {
   name                = "counting-nic"
   location            = azurerm_resource_group.counting.location
