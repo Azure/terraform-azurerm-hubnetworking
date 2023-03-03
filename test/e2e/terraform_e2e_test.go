@@ -20,11 +20,14 @@ func TestExmaples_startup(t *testing.T) {
 	}, func(t *testing.T, output test_helper.TerraformOutput) {
 		testUrl := output["connectivity_test_url"].(string)
 		response := retry.DoWithRetry(t, "assert_network_connectivity", 5, time.Minute, func() (string, error) {
+			//#nosec G107
 			resp, err := http.Get(testUrl)
 			if err != nil {
 				return "", err
 			}
-			defer resp.Body.Close()
+			defer func() {
+				_ = resp.Body.Close()
+			}()
 			buf := new(bytes.Buffer)
 			_, err = buf.ReadFrom(resp.Body)
 			if err != nil {
