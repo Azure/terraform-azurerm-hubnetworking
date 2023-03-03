@@ -72,9 +72,7 @@ type firewallOutputEntry struct {
 }
 
 type IpConfigOutputEntry struct {
-	Name              string  `mapstructure:"name"`
-	SubnetId          string  `mapstructure:"subnet_id"`
-	PublicIpAddressId *string `mapstructure:"public_ip_address_id"`
+	Name string `mapstructure:"name"`
 }
 
 type subnet struct {
@@ -659,14 +657,13 @@ func TestUnit_VnetWithFirewallShouldCreateFirewall(t *testing.T) {
 				}),
 			expected: map[string]firewallOutputEntry{
 				"vnet": {
-					Name:            "vnet_firewall",
-					SkuName:         "AZFW_VNet",
-					SkuTier:         "Basic",
-					ThreatIntelMode: "Alert",
+					Name:                "vnet_firewall",
+					SkuName:             "AZFW_VNet",
+					SkuTier:             "Basic",
+					SubnetAddressPrefix: "10.0.255.0/24",
+					ThreatIntelMode:     "Alert",
 					DefaultIpConfig: &IpConfigOutputEntry{
-						Name:              "default",
-						SubnetId:          "AzureFirewallSubnet_id",
-						PublicIpAddressId: String("vnet_fw_pip_id"),
+						Name: "default",
 					},
 				},
 			},
