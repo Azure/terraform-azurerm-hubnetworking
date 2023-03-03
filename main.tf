@@ -135,6 +135,29 @@ locals {
   }
 }
 
+resource "azurerm_subnet" "fw_subnet" {
+  for_each = local.firewalls
+
+  address_prefixes     = [each.value.subnet_address_prefix]
+  name                 = "AzureFirewallSubnet"
+  resource_group_name  = var.hub_virtual_networks[each.key].resource_group_name
+  virtual_network_name = module.hub_virtual_networks[each.key].vnet_name
+}
+
+resource "azurerm_subnet_route_table_association" "fw_subnet_routing_creat" {
+  for_each = { for vnet_name, fw in local.firewalls : vnet_name => fw if fw.subnet_route_table_id == null }
+
+  route_table_id = azurerm_route_table.hub_routing[each.key].id
+  subnet_id      = azurerm_subnet.fw_subnet[each.key].id
+}
+
+resource "azurerm_subnet_route_table_association" "fw_subnet_routing_external" {
+  for_each = { for vnet_name, fw in local.firewalls : vnet_name => fw if fw.subnet_route_table_id != null }
+
+  route_table_id = each.value.subnet_route_table_id
+  subnet_id      = azurerm_subnet.fw_subnet[each.key].id
+}
+
 resource "azurerm_firewall" "fw" {
   for_each = local.firewalls
 
@@ -153,7 +176,7 @@ resource "azurerm_firewall" "fw" {
   ip_configuration {
     name                 = each.value.default_ip_configuration.name
     public_ip_address_id = azurerm_public_ip.fw_default_ip_configuration_pip[each.key].id
-    subnet_id            = module.hub_virtual_networks[each.key].vnet_subnets_name_id["AzureFirewallSubnet"]
+    subnet_id            = azurerm_subnet.fw_subnet[each.key].id
   }
 }
 

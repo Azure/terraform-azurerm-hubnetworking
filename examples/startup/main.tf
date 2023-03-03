@@ -23,15 +23,11 @@ module "hub_mesh" {
       resource_group_lock_enabled     = false
       mesh_peering_enabled            = true
       routing_address_space           = ["10.0.0.0/16", "192.168.0.0/24"]
-      subnets = {
-        AzureFirewallSubnet = {
-          address_prefixes = ["10.0.1.0/24"]
-        }
-      }
       firewall = {
-        sku_name           = "AZFW_VNet"
-        sku_tier           = "Standard"
-        firewall_policy_id = azurerm_firewall_policy.fwpolicy.id
+        sku_name              = "AZFW_VNet"
+        sku_tier              = "Standard"
+        subnet_address_prefix = "10.0.1.0/24"
+        firewall_policy_id    = azurerm_firewall_policy.fwpolicy.id
       }
     }
     eastus2-hub = {
@@ -43,18 +39,16 @@ module "hub_mesh" {
       resource_group_lock_enabled     = false
       mesh_peering_enabled            = true
       routing_address_space           = ["10.1.0.0/16", "192.168.1.0/24"]
-      subnets = {
-        AzureFirewallSubnet = {
-          address_prefixes = ["10.1.1.0/24"]
-        }
-      }
       firewall = {
-        sku_name           = "AZFW_VNet"
-        sku_tier           = "Standard"
-        firewall_policy_id = azurerm_firewall_policy.fwpolicy.id
+        sku_name              = "AZFW_VNet"
+        sku_tier              = "Standard"
+        subnet_address_prefix = "10.1.1.0/24"
+        firewall_policy_id    = azurerm_firewall_policy.fwpolicy.id
       }
     }
   }
+
+  depends_on = [azurerm_firewall_policy_rule_collection_group.allow_internal]
 }
 
 resource "tls_private_key" "key" {

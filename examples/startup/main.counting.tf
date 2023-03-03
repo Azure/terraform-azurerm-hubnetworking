@@ -8,10 +8,10 @@ module "counting_vnet" {
   version = "1.0.0"
 
   resource_group_name = azurerm_resource_group.counting.name
-  subnets             = {
+  subnets = {
     counting-subnet = {
       address_prefixes = ["192.168.0.0/24"]
-      route_table      = {
+      route_table = {
         id = azurerm_route_table.counting.id
       }
     }
@@ -81,11 +81,12 @@ resource "azurerm_network_interface" "counting" {
 }
 
 resource "azurerm_linux_virtual_machine" "counting" {
-  name                  = "counting-machine"
-  resource_group_name   = azurerm_resource_group.counting.name
-  location              = azurerm_resource_group.counting.location
-  size                  = "Standard_B2ms"
-  admin_username        = "adminuser"
+  #checkov:skip=CKV_AZURE_50:Only for connectivity test so we use vm extension
+  name                = "counting-machine"
+  resource_group_name = azurerm_resource_group.counting.name
+  location            = azurerm_resource_group.counting.location
+  size                = "Standard_B2ms"
+  admin_username      = "adminuser"
   network_interface_ids = [
     azurerm_network_interface.counting.id,
   ]
@@ -106,4 +107,18 @@ resource "azurerm_linux_virtual_machine" "counting" {
     sku       = "22_04-lts"
     version   = "latest"
   }
+}
+
+resource "azurerm_virtual_machine_extension" "start_counting" {
+  name                 = "start-svc"
+  virtual_machine_id   = azurerm_linux_virtual_machine.counting.id
+  publisher            = "Microsoft.Azure.Extensions"
+  type                 = "CustomScript"
+  type_handler_version = "2.0"
+
+  settings = <<SETTINGS
+ {
+  "commandToExecute": "curl -sSL https://get.docker.com/ | sh && sudo docker run -d --restart=always -p 9001:9001 hashicorp/counting-service:0.0.2 && sudo docker run -d --restart=always -p 5678:5678 hashicorp/http-echo -text='hello world'"
+ }
+SETTINGS
 }

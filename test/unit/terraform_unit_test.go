@@ -49,22 +49,26 @@ type routeEntry struct {
 }
 
 type firewall struct {
-	Name    *string `json:"name"`
-	SkuName string  `json:"sku_name"`
-	SkuTier string  `json:"sku_tier"`
+	Name                *string `json:"name"`
+	SkuName             string  `json:"sku_name"`
+	SkuTier             string  `json:"sku_tier"`
+	SubnetAddressPrefix string  `json:"subnet_address_prefix"`
+	SubnetRouteTableId  *string `json:"subnet_route_table_id"`
 }
 
 type firewallOutputEntry struct {
-	Name             string               `mapstructure:"name"`
-	SkuName          string               `mapstructure:"sku_name"`
-	SkuTier          string               `mapstructure:"sku_tier"`
-	DnsServers       []string             `mapstructure:"dns_servers"`
-	FirewallPolicyId *string              `mapstructure:"firewall_policy_id"`
-	PrivateIpRanges  []string             `mapstructure:"private_ip_ranges"`
-	Tags             map[string]string    `mapstructure:"tags"`
-	ThreatIntelMode  string               `mapstructure:"threat_intel_mode"`
-	Zones            []string             `mapstructure:"zones"`
-	DefaultIpConfig  *IpConfigOutputEntry `mapstructure:"default_ip_configuration"`
+	Name                string               `mapstructure:"name"`
+	SkuName             string               `mapstructure:"sku_name"`
+	SkuTier             string               `mapstructure:"sku_tier"`
+	SubnetAddressPrefix string               `mapstructure:"subnet_address_prefix"`
+	SubnetRouteTableId  *string              `mapstructure:"subnet_route_table_id"`
+	DnsServers          []string             `mapstructure:"dns_servers"`
+	FirewallPolicyId    *string              `mapstructure:"firewall_policy_id"`
+	PrivateIpRanges     []string             `mapstructure:"private_ip_ranges"`
+	Tags                map[string]string    `mapstructure:"tags"`
+	ThreatIntelMode     string               `mapstructure:"threat_intel_mode"`
+	Zones               []string             `mapstructure:"zones"`
+	DefaultIpConfig     *IpConfigOutputEntry `mapstructure:"default_ip_configuration"`
 }
 
 type IpConfigOutputEntry struct {
@@ -294,8 +298,9 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 				"vnet0": aVnet("vnet0", true).
 					withRoutingAddressSpace("10.0.0.0/16").
 					withFirewall(firewall{
-						SkuName: "AZFW_VNet",
-						SkuTier: "Basic",
+						SkuName:             "AZFW_VNet",
+						SkuTier:             "Basic",
+						SubnetAddressPrefix: "10.0.1.0/24",
 					}).
 					withSubnet("AzureFirewallSubnet", subnet{
 						AddressPrefixes: []string{"10.0.255.0/24"},
@@ -303,8 +308,9 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 				"vnet1": aVnet("vnet1", true).
 					withRoutingAddressSpace("10.1.0.0/16").
 					withFirewall(firewall{
-						SkuName: "AZFW_VNet",
-						SkuTier: "Basic",
+						SkuName:             "AZFW_VNet",
+						SkuTier:             "Basic",
+						SubnetAddressPrefix: "10.1.1.0/24",
 					}).
 					withSubnet("AzureFirewallSubnet", subnet{
 						AddressPrefixes: []string{"10.0.255.0/24"},
@@ -397,8 +403,9 @@ func TestUnit_VnetWithUserRouteEntriesWouldProvisionUserRouteEntries(t *testing.
 				"vnet0": aVnet("vnet0", true).
 					withRoutingAddressSpace("10.0.0.0/16").
 					withFirewall(firewall{
-						SkuName: "AZFW_VNet",
-						SkuTier: "Basic",
+						SkuName:             "AZFW_VNet",
+						SkuTier:             "Basic",
+						SubnetAddressPrefix: "10.0.0.0/24",
 					}).
 					withSubnet("AzureFirewallSubnet", subnet{
 						AddressPrefixes: []string{"10.0.255.0/24"},
@@ -414,8 +421,9 @@ func TestUnit_VnetWithUserRouteEntriesWouldProvisionUserRouteEntries(t *testing.
 				"vnet1": aVnet("vnet1", true).
 					withRoutingAddressSpace("10.1.0.0/16").
 					withFirewall(firewall{
-						SkuName: "AZFW_VNet",
-						SkuTier: "Basic",
+						SkuName:             "AZFW_VNet",
+						SkuTier:             "Basic",
+						SubnetAddressPrefix: "10.1.0.0/24",
 					}).
 					withSubnet("AzureFirewallSubnet", subnet{
 						AddressPrefixes: []string{"10.0.255.0/24"},
@@ -587,14 +595,10 @@ func TestUnit_VnetWithFirewallShouldCreatePublicIp(t *testing.T) {
 			network: aVnet("vnet", false).
 				withResourceGroupName("rg0").
 				withAddressSpace("10.0.0.0/16").
-				withSubnet("AzureFirewallSubnet", subnet{
-					AddressPrefixes:           []string{"10.0.255.0/24"},
-					AssignGeneratedRouteTable: false,
-					ExternalRouteTableId:      nil,
-				}).
 				withFirewall(firewall{
-					SkuName: "AZFW_VNet",
-					SkuTier: "Basic",
+					SkuName:             "AZFW_VNet",
+					SkuTier:             "Basic",
+					SubnetAddressPrefix: "10.0.255.0/24",
 				}),
 			expected: map[string]any{
 				"vnet": map[string]any{
@@ -636,29 +640,25 @@ func TestUnit_VnetWithFirewallShouldCreateFirewall(t *testing.T) {
 		network  vnet
 		expected map[string]firewallOutputEntry
 	}{
-		//{
-		//	name: "vnet without firewall should not create firewall",
-		//	network: aVnet("vnet", false).
-		//		withResourceGroupName("rg0").
-		//		withAddressSpace("10.0.0.0/16"),
-		//	expected: map[string]firewallOutputEntry{},
-		//},
+		{
+			name: "vnet without firewall should not create firewall",
+			network: aVnet("vnet", false).
+				withResourceGroupName("rg0").
+				withAddressSpace("10.0.0.0/16"),
+			expected: map[string]firewallOutputEntry{},
+		},
 		{
 			name: "vnet firewall should create firewall",
 			network: aVnet("vnet", false).
 				withResourceGroupName("rg0").
 				withAddressSpace("10.0.0.0/16").
-				withSubnet("AzureFirewallSubnet", subnet{
-					AddressPrefixes:           []string{"10.0.255.0/24"},
-					AssignGeneratedRouteTable: false,
-					ExternalRouteTableId:      nil,
-				}).
 				withFirewall(firewall{
-					SkuName: "AZFW_VNet",
-					SkuTier: "Basic",
+					SkuName:             "AZFW_VNet",
+					SkuTier:             "Basic",
+					SubnetAddressPrefix: "10.0.255.0/24",
 				}),
 			expected: map[string]firewallOutputEntry{
-				"vnet": firewallOutputEntry{
+				"vnet": {
 					Name:            "vnet_firewall",
 					SkuName:         "AZFW_VNet",
 					SkuTier:         "Basic",
@@ -704,11 +704,12 @@ func TestUnit_RoutingAddressSpacesShouldGenerateMeshRoutes(t *testing.T) {
 	}{
 		{
 			name: "vnet without firewall should not create firewall",
-			network: []vnet{aVnet("vnet0", true).
-				withAddressSpace("10.0.0.0/16").
-				withRoutingAddressSpace("10.0.0.0/16").
-				withRoutingAddressSpace("192.168.0.0/24").
-				withHubRouterIpAddress("fake_fw_vnet0_ip"),
+			network: []vnet{
+				aVnet("vnet0", true).
+					withAddressSpace("10.0.0.0/16").
+					withRoutingAddressSpace("10.0.0.0/16").
+					withRoutingAddressSpace("192.168.0.0/24").
+					withHubRouterIpAddress("fake_fw_vnet0_ip"),
 				aVnet("vnet1", true).
 					withAddressSpace("10.1.0.0/16").
 					withRoutingAddressSpace("10.1.0.0/16").

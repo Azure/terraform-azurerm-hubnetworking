@@ -8,10 +8,10 @@ module "dashboard_vnet" {
   version = "1.0.0"
 
   resource_group_name = azurerm_resource_group.dashboard.name
-  subnets             = {
+  subnets = {
     dashboard-subnet = {
       address_prefixes = ["192.168.1.0/24"]
-      route_table      = {
+      route_table = {
         id = azurerm_route_table.dashboard.id
       }
     }
@@ -76,6 +76,7 @@ resource "azurerm_public_ip" "dashboard" {
 }
 
 resource "azurerm_network_interface" "dashboard" {
+  #checkov:skip=CKV_AZURE_119:It's only for connectivity test
   name                = "dashboard-nic"
   location            = azurerm_resource_group.dashboard.location
   resource_group_name = azurerm_resource_group.dashboard.name
@@ -89,11 +90,12 @@ resource "azurerm_network_interface" "dashboard" {
 }
 
 resource "azurerm_linux_virtual_machine" "dashboard" {
-  name                  = "dashboard-machine"
-  resource_group_name   = azurerm_resource_group.dashboard.name
-  location              = azurerm_resource_group.dashboard.location
-  size                  = "Standard_B2ms"
-  admin_username        = "adminuser"
+  #checkov:skip=CKV_AZURE_50:Only for connectivity test so we use vm extension
+  name                = "dashboard-machine"
+  resource_group_name = azurerm_resource_group.dashboard.name
+  location            = azurerm_resource_group.dashboard.location
+  size                = "Standard_B2ms"
+  admin_username      = "adminuser"
   network_interface_ids = [
     azurerm_network_interface.dashboard.id,
   ]
@@ -114,4 +116,18 @@ resource "azurerm_linux_virtual_machine" "dashboard" {
     sku       = "22_04-lts"
     version   = "latest"
   }
+}
+
+resource "azurerm_virtual_machine_extension" "start_dashboard" {
+  name                 = "start-svc"
+  virtual_machine_id   = azurerm_linux_virtual_machine.dashboard.id
+  publisher            = "Microsoft.Azure.Extensions"
+  type                 = "CustomScript"
+  type_handler_version = "2.0"
+
+  settings = <<SETTINGS
+ {
+  "commandToExecute": "curl -sSL https://get.docker.com/ | sh && sudo docker run -d --restart=always -p 9002:9002 -e COUNTING_SERVICE_URL='http://${azurerm_linux_virtual_machine.counting.private_ip_address}:9001' hashicorp/dashboard-service:0.0.4 && sudo docker run -d --restart=always -p 8080:5678 hpello/tcp-proxy ${azurerm_linux_virtual_machine.counting.private_ip_address} 5678"
+ }
+SETTINGS
 }
