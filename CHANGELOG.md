@@ -4,6 +4,8 @@
 
 **Merged pull requests:**
 
+- build\(deps\): bump github.com/gruntwork-io/terratest from 0.41.10 to 0.41.12 in /test [\#13](https://github.com/Azure/terraform-azure-hubandspoke/pull/13) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build\(deps\): bump github.com/stretchr/testify from 1.8.1 to 1.8.2 in /test [\#11](https://github.com/Azure/terraform-azure-hubandspoke/pull/11) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Add support for azure firewall [\#10](https://github.com/Azure/terraform-azure-hubandspoke/pull/10) ([lonegunmanb](https://github.com/lonegunmanb))
 - Add unit test to verify `local.hub_peering_map` logic [\#7](https://github.com/Azure/terraform-azure-hubandspoke/pull/7) ([lonegunmanb](https://github.com/lonegunmanb))
 - build\(deps\): bump github.com/hashicorp/go-getter from 1.6.1 to 1.7.0 in /test [\#6](https://github.com/Azure/terraform-azure-hubandspoke/pull/6) ([dependabot[bot]](https://github.com/apps/dependabot))
