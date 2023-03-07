@@ -27,7 +27,7 @@ module "hub_virtual_networks" {
 
   # added to make sure dependency graph is correct
   virtual_network_name          = each.value.name
-  virtual_network_address_space = each.value.address_space
+  virtual_network_address_space = each.value.address_spaces
   virtual_network_location      = each.value.location
   resource_group_name           = try(azurerm_resource_group.rg[each.value.resource_group_name].name, each.value.resource_group_name)
   virtual_network_bgp_community = each.value.bgp_community
@@ -35,7 +35,9 @@ module "hub_virtual_networks" {
     id     = each.value.ddos_protection_plan_id
     enable = true
   }
-  virtual_network_dns_servers             = each.value.dns_servers
+  virtual_network_dns_servers = each.value.dns_servers == null ? null : {
+    dns_servers = each.value.dns_servers
+  }
   virtual_network_flow_timeout_in_minutes = each.value.flow_timeout_in_minutes
   virtual_network_tags                    = each.value.tags
   subnets                                 = try(local.subnets_map[each.key], {})
@@ -51,7 +53,7 @@ resource "azurerm_virtual_network_peering" "hub_peering" {
   name = each.key
   # added to make sure dependency graph is correct
   remote_virtual_network_id    = each.value.remote_virtual_network_id
-  resource_group_name          = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name, var.hub_virtual_networks[each.key].resource_group_name)
+  resource_group_name          = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.value.virtual_network_name].resource_group_name].name, var.hub_virtual_networks[each.value.virtual_network_name].resource_group_name)
   virtual_network_name         = each.value.virtual_network_name
   allow_forwarded_traffic      = each.value.allow_forwarded_traffic
   allow_gateway_transit        = each.value.allow_gateway_transit
@@ -64,12 +66,27 @@ resource "azurerm_route_table" "hub_routing" {
 
   location                      = var.hub_virtual_networks[each.key].location
   name                          = "${each.key}-rt"
-  resource_group_name           = azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name
+  resource_group_name           = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name, var.hub_virtual_networks[each.key].resource_group_name)
   disable_bgp_route_propagation = false
   tags                          = {}
 
+  route {
+    address_prefix = "0.0.0.0/0"
+    name           = "internet"
+    next_hop_type  = "Internet"
+  }
   dynamic "route" {
-    for_each = toset(each.value)
+    for_each = toset(each.value.mesh_routes)
+
+    content {
+      address_prefix         = route.value.address_prefix
+      name                   = route.value.name
+      next_hop_type          = route.value.next_hop_type
+      next_hop_in_ip_address = route.value.next_hop_ip_address
+    }
+  }
+  dynamic "route" {
+    for_each = toset(each.value.user_routes)
 
     content {
       address_prefix         = route.value.address_prefix
@@ -106,16 +123,33 @@ resource "azurerm_public_ip" "fw_default_ip_configuration_pip" {
   name                = each.value.name
   resource_group_name = each.value.resource_group_name
   ip_version          = each.value.ip_version
-  sku                 = each.value.sku
+  sku                 = "Standard"
   sku_tier            = each.value.sku_tier
   tags                = {}
   zones               = each.value.zones
 }
 
-locals {
-  vnet_firewall_default_ip_configuration_public_ip_id = {
-    for vnet_name, pip in azurerm_public_ip.fw_default_ip_configuration_pip : vnet_name => pip.id
-  }
+resource "azurerm_subnet" "fw_subnet" {
+  for_each = local.firewalls
+
+  address_prefixes     = [each.value.subnet_address_prefix]
+  name                 = "AzureFirewallSubnet"
+  resource_group_name  = var.hub_virtual_networks[each.key].resource_group_name
+  virtual_network_name = module.hub_virtual_networks[each.key].vnet_name
+}
+
+resource "azurerm_subnet_route_table_association" "fw_subnet_routing_creat" {
+  for_each = { for vnet_name, fw in local.firewalls : vnet_name => fw if fw.subnet_route_table_id == null }
+
+  route_table_id = azurerm_route_table.hub_routing[each.key].id
+  subnet_id      = azurerm_subnet.fw_subnet[each.key].id
+}
+
+resource "azurerm_subnet_route_table_association" "fw_subnet_routing_external" {
+  for_each = { for vnet_name, fw in local.firewalls : vnet_name => fw if fw.subnet_route_table_id != null }
+
+  route_table_id = each.value.subnet_route_table_id
+  subnet_id      = azurerm_subnet.fw_subnet[each.key].id
 }
 
 resource "azurerm_firewall" "fw" {
@@ -129,14 +163,14 @@ resource "azurerm_firewall" "fw" {
   dns_servers         = each.value.dns_servers
   firewall_policy_id  = each.value.firewall_policy_id
   private_ip_ranges   = each.value.private_ip_ranges
-  tags                = {}
+  tags                = each.value.tags
   threat_intel_mode   = each.value.threat_intel_mode
   zones               = each.value.zones
 
   ip_configuration {
     name                 = each.value.default_ip_configuration.name
-    public_ip_address_id = each.value.public_ip_address_id
-    subnet_id            = each.value.default_ip_configuration.subnet_id
+    public_ip_address_id = azurerm_public_ip.fw_default_ip_configuration_pip[each.key].id
+    subnet_id            = azurerm_subnet.fw_subnet[each.key].id
   }
 }
 
@@ -145,4 +179,3 @@ locals {
     for vnet_name, fw in azurerm_firewall.fw : vnet_name => fw.ip_configuration[0].private_ip_address
   }
 }
-

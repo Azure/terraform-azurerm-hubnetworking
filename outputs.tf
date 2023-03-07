@@ -14,12 +14,14 @@ output "hub_route_tables" {
     for vnet_name, rt in azurerm_route_table.hub_routing : vnet_name => {
       name = rt.name
       id   = rt.id
-      routes = [for r in rt.route : {
-        name                   = r.name
-        address_prefix         = r.address_prefix
-        next_hop_type          = r.next_hop_type
-        next_hop_in_ip_address = r.next_hop_in_ip_address
-      }]
+      routes = [
+        for r in rt.route : {
+          name                   = r.name
+          address_prefix         = r.address_prefix
+          next_hop_type          = r.next_hop_type
+          next_hop_in_ip_address = r.next_hop_in_ip_address
+        }
+      ]
     }
   }
 }
@@ -37,11 +39,13 @@ output "resource_groups" {
 output "virtual_networks" {
   value = {
     for vnet_name, vnet_mod in module.hub_virtual_networks : vnet_name => {
-      name            = vnet_name
-      id              = vnet_mod.vnet_id
-      location        = vnet_mod.vnet_location
-      address_space   = vnet_mod.vnet_address_space
-      subnets_name_id = vnet_mod.vnet_subnets_name_id
+      name                  = vnet_name
+      resource_group_name   = var.hub_virtual_networks[vnet_name].resource_group_name
+      id                    = vnet_mod.vnet_id
+      location              = vnet_mod.vnet_location
+      address_space         = vnet_mod.vnet_address_space
+      subnets_name_id       = vnet_mod.vnet_subnets_name_id
+      hub_router_ip_address = try(azurerm_firewall.fw[vnet_name].ip_configuration[0].private_ip_address, var.hub_virtual_networks[vnet_name].hub_router_ip_address)
     }
   }
 }
