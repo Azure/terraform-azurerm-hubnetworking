@@ -29,7 +29,7 @@ type vnet struct {
 	Name                     string                `json:"name"`
 	MeshPeeringEnabled       bool                  `json:"mesh_peering_enabled"`
 	Subnets                  map[string]subnet     `json:"subnets"`
-	AddressSpaces            []string              `json:"address_spaces"`
+	AddressSpace             []string              `json:"address_space"`
 	ResourceGroupName        string                `json:"resource_group_name"`
 	Location                 string                `json:"location"`
 	ResourceGroupLockEnabled bool                  `json:"resource_group_lock_enabled"`
@@ -109,7 +109,7 @@ func aVnet(name string, meshPeering bool) vnet {
 }
 
 func (n vnet) withAddressSpace(cidr string) vnet {
-	n.AddressSpaces = append(n.AddressSpaces, cidr)
+	n.AddressSpace = append(n.AddressSpace, cidr)
 	return n
 }
 
@@ -129,7 +129,7 @@ func (n vnet) withRoutingAddressSpace(cidr string) vnet {
 }
 
 func (n vnet) withEmptyRoutingAddressSpace() vnet {
-	n.AddressSpaces = []string{}
+	n.AddressSpace = []string{}
 	return n
 }
 
@@ -693,7 +693,7 @@ func TestUnit_VnetWithFirewallShouldCreateFirewall(t *testing.T) {
 	}
 }
 
-func TestUnit_RoutingAddressSpacesShouldGenerateMeshRoutes(t *testing.T) {
+func TestUnit_RoutingAddressSpaceShouldGenerateMeshRoutes(t *testing.T) {
 	inputs := []struct {
 		name     string
 		network  []vnet
