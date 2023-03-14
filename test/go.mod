@@ -24,7 +24,6 @@ require (
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/spdystream v0.1.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
@@ -43,7 +42,6 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.1 // indirect
-	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gruntwork-io/go-commons v0.15.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -82,7 +80,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tmccombs/hcl2json v0.5.0 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
-	github.com/urfave/cli v1.22.12 // indirect
 	github.com/urfave/cli/v2 v2.25.0 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
