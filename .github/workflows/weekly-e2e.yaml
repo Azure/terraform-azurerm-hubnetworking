@@ -6,7 +6,7 @@ on:
 
 jobs:
   full-e2e-check:
-    runs-on: [self-hosted, 1ES.Pool=terraform-azure-hubandspoke]
+    runs-on: [self-hosted, 1ES.Pool=terraform-azure-hubnetworking]
     environment:
       name: crontests
     steps:

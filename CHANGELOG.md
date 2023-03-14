@@ -1,18 +1,18 @@
 # Changelog
 
-## [Unreleased](https://github.com/Azure/terraform-azure-hubandspoke/tree/HEAD)
+## [Unreleased](https://github.com/Azure/terraform-azure-hubnetworking/tree/HEAD)
 
 **Merged pull requests:**
 
-- build\(deps\): bump github.com/gruntwork-io/terratest from 0.41.10 to 0.41.12 in /test [\#13](https://github.com/Azure/terraform-azure-hubandspoke/pull/13) ([dependabot[bot]](https://github.com/apps/dependabot))
-- 0.1.0 Candidate [\#12](https://github.com/Azure/terraform-azure-hubandspoke/pull/12) ([lonegunmanb](https://github.com/lonegunmanb))
-- build\(deps\): bump github.com/stretchr/testify from 1.8.1 to 1.8.2 in /test [\#11](https://github.com/Azure/terraform-azure-hubandspoke/pull/11) ([dependabot[bot]](https://github.com/apps/dependabot))
-- Add support for azure firewall [\#10](https://github.com/Azure/terraform-azure-hubandspoke/pull/10) ([lonegunmanb](https://github.com/lonegunmanb))
-- Add unit test to verify `local.hub_peering_map` logic [\#7](https://github.com/Azure/terraform-azure-hubandspoke/pull/7) ([lonegunmanb](https://github.com/lonegunmanb))
-- build\(deps\): bump github.com/hashicorp/go-getter from 1.6.1 to 1.7.0 in /test [\#6](https://github.com/Azure/terraform-azure-hubandspoke/pull/6) ([dependabot[bot]](https://github.com/apps/dependabot))
-- build\(deps\): bump github.com/hashicorp/go-getter/v2 from 2.1.1 to 2.2.0 in /test [\#5](https://github.com/Azure/terraform-azure-hubandspoke/pull/5) ([dependabot[bot]](https://github.com/apps/dependabot))
-- Suggest [\#4](https://github.com/Azure/terraform-azure-hubandspoke/pull/4) ([lonegunmanb](https://github.com/lonegunmanb))
-- Matt ffffff/initial tf [\#1](https://github.com/Azure/terraform-azure-hubandspoke/pull/1) ([matt-FFFFFF](https://github.com/matt-FFFFFF))
+- build\(deps\): bump github.com/gruntwork-io/terratest from 0.41.10 to 0.41.12 in /test [\#13](https://github.com/Azure/terraform-azure-hubnetworking/pull/13) ([dependabot[bot]](https://github.com/apps/dependabot))
+- 0.1.0 Candidate [\#12](https://github.com/Azure/terraform-azure-hubnetworking/pull/12) ([lonegunmanb](https://github.com/lonegunmanb))
+- build\(deps\): bump github.com/stretchr/testify from 1.8.1 to 1.8.2 in /test [\#11](https://github.com/Azure/terraform-azure-hubnetworking/pull/11) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Add support for azure firewall [\#10](https://github.com/Azure/terraform-azure-hubnetworking/pull/10) ([lonegunmanb](https://github.com/lonegunmanb))
+- Add unit test to verify `local.hub_peering_map` logic [\#7](https://github.com/Azure/terraform-azure-hubnetworking/pull/7) ([lonegunmanb](https://github.com/lonegunmanb))
+- build\(deps\): bump github.com/hashicorp/go-getter from 1.6.1 to 1.7.0 in /test [\#6](https://github.com/Azure/terraform-azure-hubnetworking/pull/6) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build\(deps\): bump github.com/hashicorp/go-getter/v2 from 2.1.1 to 2.2.0 in /test [\#5](https://github.com/Azure/terraform-azure-hubnetworking/pull/5) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Suggest [\#4](https://github.com/Azure/terraform-azure-hubnetworking/pull/4) ([lonegunmanb](https://github.com/lonegunmanb))
+- Matt ffffff/initial tf [\#1](https://github.com/Azure/terraform-azure-hubnetworking/pull/1) ([matt-FFFFFF](https://github.com/matt-FFFFFF))
 
 
 
