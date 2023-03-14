@@ -5,6 +5,9 @@ on:
       - main
       - master
 
+permissions:
+  contents: write
+
 jobs:
   pr-merged:
     uses: Azure/tfmod-scaffold/.github/workflows/pr-merged.yaml@main
