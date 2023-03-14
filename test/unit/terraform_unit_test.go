@@ -130,7 +130,7 @@ func (n vnet) withRoutingAddressSpace(cidr string) vnet {
 }
 
 func (n vnet) withEmptyRoutingAddressSpace() vnet {
-	n.AddressSpace = []string{}
+	n.RoutingAddressSpace = []string{}
 	return n
 }
 
@@ -265,8 +265,8 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 		{
 			name: "empty routing address should create empty route table",
 			networks: map[string]vnet{
-				"vnet0": aVnet("vnet0", true).withAddressSpace("10.0.0.0/16").withEmptyRoutingAddressSpace(),
-				"vnet1": aVnet("vnet1", true).withAddressSpace("10.1.0.0/16").withEmptyRoutingAddressSpace(),
+				"vnet0": aVnet("vnet0", true).withEmptyRoutingAddressSpace().withAddressSpace("10.0.0.0/16"),
+				"vnet1": aVnet("vnet1", true).withEmptyRoutingAddressSpace().withAddressSpace("10.1.0.0/16"),
 			},
 			expected: map[string][]routeEntryOutput{
 				"vnet0": {},
