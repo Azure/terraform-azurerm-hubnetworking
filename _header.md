@@ -16,7 +16,7 @@ Optionally, these virtual networks can be peered in a mesh topology.
 
 ```terraform
 module "hubnetworks" {
-  source  = "Azure/hubnetworking/azure"
+  source  = "Azure/hubnetworking/azurerm"
   version = "<version>" # change this to your desired version, https://www.terraform.io/language/expressions/version-constraints
 
   hub_virtual_networks = {
