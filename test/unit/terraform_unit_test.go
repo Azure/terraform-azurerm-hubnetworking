@@ -29,7 +29,7 @@ type vnet struct {
 	Name                     string                `json:"name"`
 	MeshPeeringEnabled       bool                  `json:"mesh_peering_enabled"`
 	Subnets                  map[string]subnet     `json:"subnets"`
-	AddressSpace             []string              `json:"address_space"`
+	AddressSpaces            []string              `json:"address_spaces"`
 	ResourceGroupName        string                `json:"resource_group_name"`
 	Location                 string                `json:"location"`
 	ResourceGroupLockEnabled bool                  `json:"resource_group_lock_enabled"`
@@ -105,12 +105,12 @@ func aVnet(name string, meshPeering bool) vnet {
 		Subnets:               make(map[string]subnet, 0),
 		ResourceGroupCreation: false,
 		HubRouterIpAddress:    String("dummyIp"),
-		AddressSpace:          make([]string, 0, 2),
+		AddressSpaces:         make([]string, 0, 2),
 	}
 }
 
 func (n vnet) withAddressSpace(cidr string) vnet {
-	n.AddressSpace = append(n.AddressSpace, cidr)
+	n.AddressSpaces = append(n.AddressSpaces, cidr)
 	return n
 }
 

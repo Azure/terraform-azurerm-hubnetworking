@@ -5,7 +5,7 @@ A map of the hub virtual networks to create. The map key is an arbitrary value t
 ### Mandatory fields
 
 - `name` - The name of the Virtual Network.
-- `address_space` - A list of IPv4 address spaces that are used by this virtual network in CIDR format, e.g. `["192.168.0.0/24"]`.
+- `address_spaces` - A list of IPv4 address spaces that are used by this virtual network in CIDR format, e.g. `["192.168.0.0/24"]`.
 - `location` - The Azure location where the virtual network should be created.
 - `resource_group_name` - The name of the resource group in which the virtual network should be created.
 
@@ -78,7 +78,7 @@ A map of the hub virtual networks to create. The map key is an arbitrary value t
 DESCRIPTION
   type = map(object({
     name                = string
-    address_space       = list(string)
+    address_spaces      = list(string)
     location            = string
     resource_group_name = string
 
