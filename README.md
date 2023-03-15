@@ -135,7 +135,7 @@ Description: A map of the hub virtual networks to create. The map key is an arbi
   - `threat_intel_mode` - (Optional) The threat intelligence mode for the Azure Firewall. Possible values include `Alert`, `Deny`, `Off`.
   - `zones` - (Optional) A list of availability zones to use for the Azure Firewall. If not specified will be `null`.
   - `tags` - (Optional) A map of tags to apply to the Azure Firewall. If not specified
-  - `default_ip_configuration` - (Optional) An object with the following fields:
+  - `default_ip_configuration` - (Optional) An object with the following fields. If not specified the defaults below will be used:
     - `name` - (Optional) The name of the default IP configuration. If not specified will use `default`.
     - `public_ip_config` - (Optional) An object with the following fields:
       - `name` - (Optional) The name of the public IP configuration. If not specified will use `pip-afw-{vnetname}`.
