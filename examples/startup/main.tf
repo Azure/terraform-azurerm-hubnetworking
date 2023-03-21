@@ -16,7 +16,7 @@ module "hub_mesh" {
   hub_virtual_networks = {
     eastus-hub = {
       name                            = "eastus-hub"
-      address_spaces                  = ["10.0.0.0/16"]
+      address_space                   = ["10.0.0.0/16"]
       location                        = "eastus"
       resource_group_name             = azurerm_resource_group.hub_rg["eastus"].name
       resource_group_creation_enabled = false
@@ -32,7 +32,7 @@ module "hub_mesh" {
     }
     eastus2-hub = {
       name                            = "eastus2-hub"
-      address_spaces                  = ["10.1.0.0/16"]
+      address_space                   = ["10.1.0.0/16"]
       location                        = "eastus2"
       resource_group_name             = azurerm_resource_group.hub_rg["eastus2"].name
       resource_group_creation_enabled = false
