@@ -132,7 +132,7 @@ resource "azurerm_public_ip" "fw_default_ip_configuration_pip" {
 resource "azurerm_subnet" "fw_subnet" {
   for_each = local.firewalls
 
-  address_prefixes     = [each.value.subnet_address_space]
+  address_prefixes     = [each.value.subnet_address_prefix]
   name                 = "AzureFirewallSubnet"
   resource_group_name  = var.hub_virtual_networks[each.key].resource_group_name
   virtual_network_name = module.hub_virtual_networks[each.key].vnet_name
