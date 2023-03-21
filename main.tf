@@ -27,7 +27,7 @@ module "hub_virtual_networks" {
 
   # added to make sure dependency graph is correct
   virtual_network_name          = each.value.name
-  virtual_network_address_space = each.value.address_spaces
+  virtual_network_address_space = each.value.address_space
   virtual_network_location      = each.value.location
   resource_group_name           = try(azurerm_resource_group.rg[each.value.resource_group_name].name, each.value.resource_group_name)
   virtual_network_bgp_community = each.value.bgp_community
@@ -132,7 +132,7 @@ resource "azurerm_public_ip" "fw_default_ip_configuration_pip" {
 resource "azurerm_subnet" "fw_subnet" {
   for_each = local.firewalls
 
-  address_prefixes     = [each.value.subnet_address_prefix]
+  address_prefixes     = [each.value.subnet_address_space]
   name                 = "AzureFirewallSubnet"
   resource_group_name  = var.hub_virtual_networks[each.key].resource_group_name
   virtual_network_name = module.hub_virtual_networks[each.key].vnet_name

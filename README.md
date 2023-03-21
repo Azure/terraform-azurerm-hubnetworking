@@ -72,7 +72,7 @@ Description: A map of the hub virtual networks to create. The map key is an arbi
 ### Mandatory fields
 
 - `name` - The name of the Virtual Network.
-- `address_spaces` - A list of IPv4 address spaces that are used by this virtual network in CIDR format, e.g. `["192.168.0.0/24"]`.
+- `address_space` - A list of IPv4 address spaces that are used by this virtual network in CIDR format, e.g. `["192.168.0.0/24"]`.
 - `location` - The Azure location where the virtual network should be created.
 - `resource_group_name` - The name of the resource group in which the virtual network should be created.
 
@@ -93,7 +93,7 @@ Description: A map of the hub virtual networks to create. The map key is an arbi
 
 #### Route table entries
 
-- `route_table_entries` - A map of additional route table entries to add to the route table for this hub network. Default empty `{}`. The value is an object with the following fields:
+- `route_table_entries` - (Optional) A map of additional route table entries to add to the route table for this hub network. Default empty `{}`. The value is an object with the following fields:
   - `name` - The name of the route table entry.
   - `address_prefix` - The address prefix to match for this route table entry.
   - `next_hop_type` - The type of the next hop. Possible values include `Internet`, `VirtualAppliance`, `VirtualNetworkGateway`, `VnetLocal`, `None`.
@@ -102,7 +102,7 @@ Description: A map of the hub virtual networks to create. The map key is an arbi
 
 #### Subnets
 
-- `subnets` - A map of subnets to create in the virtual network. The value is an object with the following fields:
+- `subnets` - (Optional) A map of subnets to create in the virtual network. The value is an object with the following fields:
   - `address_prefixes` - The IPv4 address prefixes to use for the subnet in CIDR format.
   - `nat_gateway` - (Optional) An object with the following fields:
     - `id` - The ID of the NAT Gateway which should be associated with the Subnet. Changing this forces a new resource to be created.
@@ -148,7 +148,7 @@ Type:
 ```hcl
 map(object({
     name                = string
-    address_spaces      = list(string)
+    address_space       = list(string)
     location            = string
     resource_group_name = string
 
