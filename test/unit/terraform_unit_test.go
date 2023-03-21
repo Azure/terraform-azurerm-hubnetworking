@@ -29,7 +29,7 @@ type vnet struct {
 	Name                     string                `json:"name"`
 	MeshPeeringEnabled       bool                  `json:"mesh_peering_enabled"`
 	Subnets                  map[string]subnet     `json:"subnets"`
-	AddressSpaces            []string              `json:"address_spaces"`
+	AddressSpace             []string              `json:"address_space"`
 	ResourceGroupName        string                `json:"resource_group_name"`
 	Location                 string                `json:"location"`
 	ResourceGroupLockEnabled bool                  `json:"resource_group_lock_enabled"`
@@ -105,11 +105,12 @@ func aVnet(name string, meshPeering bool) vnet {
 		Subnets:               make(map[string]subnet, 0),
 		ResourceGroupCreation: false,
 		HubRouterIpAddress:    String("dummyIp"),
+		AddressSpace:          make([]string, 0, 2),
 	}
 }
 
 func (n vnet) withAddressSpace(cidr string) vnet {
-	n.AddressSpaces = append(n.AddressSpaces, cidr)
+	n.AddressSpace = append(n.AddressSpace, cidr)
 	return n
 }
 
@@ -129,7 +130,7 @@ func (n vnet) withRoutingAddressSpace(cidr string) vnet {
 }
 
 func (n vnet) withEmptyRoutingAddressSpace() vnet {
-	n.AddressSpaces = []string{}
+	n.RoutingAddressSpace = []string{}
 	return n
 }
 
@@ -177,9 +178,9 @@ func TestUnit_VnetWithMeshPeeringShouldAppearInHubPeeringMap(t *testing.T) {
 		{
 			vars: vars{
 				"hub_virtual_networks": map[string]vnet{
-					"vnet0":       aVnet("vnet0", true),
-					"vnet1":       aVnet("vnet1", true),
-					"nonMeshVnet": aVnet("nonMeshVnet", false),
+					"vnet0":       aVnet("vnet0", true).withAddressSpace("10.0.0.0/16"),
+					"vnet1":       aVnet("vnet1", true).withAddressSpace("10.1.0.0/16"),
+					"nonMeshVnet": aVnet("nonMeshVnet", false).withAddressSpace("10.2.0.0/16"),
 				},
 			},
 			expectedPeeringCount: 2,
@@ -187,10 +188,10 @@ func TestUnit_VnetWithMeshPeeringShouldAppearInHubPeeringMap(t *testing.T) {
 		{
 			vars: vars{
 				"hub_virtual_networks": map[string]vnet{
-					"vnet0":       aVnet("vnet0", true),
-					"vnet1":       aVnet("vnet1", true),
-					"vnet2":       aVnet("vnet2", true),
-					"nonMeshVnet": aVnet("nonMeshVnet", false),
+					"vnet0":       aVnet("vnet0", true).withAddressSpace("10.0.0.0/16"),
+					"vnet1":       aVnet("vnet1", true).withAddressSpace("10.1.0.0/16"),
+					"vnet2":       aVnet("vnet2", true).withAddressSpace("10.2.0.0/16"),
+					"nonMeshVnet": aVnet("nonMeshVnet", false).withAddressSpace("10.3.0.0/16"),
 				},
 			},
 			expectedPeeringCount: 6,
@@ -227,8 +228,8 @@ func TestUnit_VnetWithMeshPeeringShouldAppearInHubPeeringMap(t *testing.T) {
 func TestUnit_VnetWithResourceGroupCreationWouldBeGatheredInResourceGroupData(t *testing.T) {
 	varFilePath := vars{
 		"hub_virtual_networks": map[string]vnet{
-			"vnet0": aVnet("vnet0", true).withResourceGroupName("newRg").withResourceGroupCreation(true),
-			"vnet1": aVnet("vnet1", true).withResourceGroupName("existedRg").withResourceGroupCreation(false),
+			"vnet0": aVnet("vnet0", true).withResourceGroupName("newRg").withResourceGroupCreation(true).withAddressSpace("10.0.0.0/16"),
+			"vnet1": aVnet("vnet1", true).withResourceGroupName("existedRg").withResourceGroupCreation(false).withAddressSpace("10.1.0.0/16"),
 		},
 	}.toFile(t)
 	defer func() { _ = os.Remove(varFilePath) }()
@@ -253,8 +254,8 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 		{
 			name: "null routing address should create empty route table",
 			networks: map[string]vnet{
-				"vnet0": aVnet("vnet0", true),
-				"vnet1": aVnet("vnet1", true),
+				"vnet0": aVnet("vnet0", true).withAddressSpace("10.0.0.0/16"),
+				"vnet1": aVnet("vnet1", true).withAddressSpace("10.1.0.0/16"),
 			},
 			expected: map[string][]routeEntryOutput{
 				"vnet0": {},
@@ -264,8 +265,8 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 		{
 			name: "empty routing address should create empty route table",
 			networks: map[string]vnet{
-				"vnet0": aVnet("vnet0", true).withEmptyRoutingAddressSpace(),
-				"vnet1": aVnet("vnet1", true).withEmptyRoutingAddressSpace(),
+				"vnet0": aVnet("vnet0", true).withEmptyRoutingAddressSpace().withAddressSpace("10.0.0.0/16"),
+				"vnet1": aVnet("vnet1", true).withEmptyRoutingAddressSpace().withAddressSpace("10.1.0.0/16"),
 			},
 			expected: map[string][]routeEntryOutput{
 				"vnet0": {},
@@ -275,8 +276,8 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 		{
 			name: "uni-directional route",
 			networks: map[string]vnet{
-				"vnet0": aVnet("vnet0", true),
-				"vnet1": aVnet("vnet1", true).withRoutingAddressSpace("10.0.0.0/16"),
+				"vnet0": aVnet("vnet0", true).withAddressSpace("10.0.0.0/16"),
+				"vnet1": aVnet("vnet1", true).withAddressSpace("10.1.0.0/16").withRoutingAddressSpace("10.0.0.0/16"),
 			},
 			expected: map[string][]routeEntryOutput{
 				"vnet0": {
@@ -294,6 +295,7 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 			name: "bi-directional route",
 			networks: map[string]vnet{
 				"vnet0": aVnet("vnet0", true).
+					withAddressSpace("10.0.0.0/16").
 					withRoutingAddressSpace("10.0.0.0/16").
 					withFirewall(firewall{
 						SkuName:             "AZFW_VNet",
@@ -304,6 +306,7 @@ func TestUnit_VnetWithRoutingAddressSpaceWouldProvisionRouteEntries(t *testing.T
 						AddressPrefixes: []string{"10.0.255.0/24"},
 					}),
 				"vnet1": aVnet("vnet1", true).
+					withAddressSpace("10.1.0.0/16").
 					withRoutingAddressSpace("10.1.0.0/16").
 					withFirewall(firewall{
 						SkuName:             "AZFW_VNet",
@@ -370,11 +373,13 @@ func TestUnit_VnetWithUserRouteEntriesWouldProvisionUserRouteEntries(t *testing.
 		{
 			name: "null routing address should create empty route table",
 			networks: map[string]vnet{
-				"vnet0": aVnet("vnet0", true).withUserRouteEntry(routeEntry{
-					Name:          "no_internet",
-					AddressPrefix: "0.0.0.0/0",
-					NextHopType:   "None",
-				}).withUserRouteEntry(routeEntry{
+				"vnet0": aVnet("vnet0", true).
+					withAddressSpace("10.0.0.0/16").
+					withUserRouteEntry(routeEntry{
+						Name:          "no_internet",
+						AddressPrefix: "0.0.0.0/0",
+						NextHopType:   "None",
+					}).withUserRouteEntry(routeEntry{
 					Name:          "intranet",
 					AddressPrefix: "10.0.0.0/16",
 					NextHopType:   "VnetLocal",
@@ -399,6 +404,7 @@ func TestUnit_VnetWithUserRouteEntriesWouldProvisionUserRouteEntries(t *testing.
 			name: "bi-directional route",
 			networks: map[string]vnet{
 				"vnet0": aVnet("vnet0", true).
+					withAddressSpace("10.0.0.0/16").
 					withRoutingAddressSpace("10.0.0.0/16").
 					withFirewall(firewall{
 						SkuName:             "AZFW_VNet",
@@ -417,6 +423,7 @@ func TestUnit_VnetWithUserRouteEntriesWouldProvisionUserRouteEntries(t *testing.
 					NextHopType:   "VnetLocal",
 				}),
 				"vnet1": aVnet("vnet1", true).
+					withAddressSpace("10.1.0.0/16").
 					withRoutingAddressSpace("10.1.0.0/16").
 					withFirewall(firewall{
 						SkuName:             "AZFW_VNet",
@@ -601,7 +608,7 @@ func TestUnit_VnetWithFirewallShouldCreatePublicIp(t *testing.T) {
 			expected: map[string]any{
 				"vnet": map[string]any{
 					"location":            "eastus",
-					"name":                "vnet-fw-default-ip-configuration-pip",
+					"name":                "pip-afw-vnet",
 					"resource_group_name": "rg0",
 					"ip_version":          "IPv4",
 					"sku_tier":            "Regional",
@@ -657,7 +664,7 @@ func TestUnit_VnetWithFirewallShouldCreateFirewall(t *testing.T) {
 				}),
 			expected: map[string]firewallOutputEntry{
 				"vnet": {
-					Name:                "vnet_firewall",
+					Name:                "afw-vnet",
 					SkuName:             "AZFW_VNet",
 					SkuTier:             "Basic",
 					SubnetAddressPrefix: "10.0.255.0/24",
@@ -693,7 +700,7 @@ func TestUnit_VnetWithFirewallShouldCreateFirewall(t *testing.T) {
 	}
 }
 
-func TestUnit_RoutingAddressSpacesShouldGenerateMeshRoutes(t *testing.T) {
+func TestUnit_RoutingAddressSpaceShouldGenerateMeshRoutes(t *testing.T) {
 	inputs := []struct {
 		name     string
 		network  []vnet

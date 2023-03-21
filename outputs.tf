@@ -43,7 +43,7 @@ output "virtual_networks" {
       resource_group_name   = var.hub_virtual_networks[vnet_name].resource_group_name
       id                    = vnet_mod.vnet_id
       location              = vnet_mod.vnet_location
-      address_space         = vnet_mod.vnet_address_space
+      address_spaces        = vnet_mod.vnet_address_space
       subnets_name_id       = vnet_mod.vnet_subnets_name_id
       hub_router_ip_address = try(azurerm_firewall.fw[vnet_name].ip_configuration[0].private_ip_address, var.hub_virtual_networks[vnet_name].hub_router_ip_address)
     }

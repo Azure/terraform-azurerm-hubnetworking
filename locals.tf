@@ -1,7 +1,7 @@
 locals {
   firewalls = {
     for vnet_name, vnet in var.hub_virtual_networks : vnet_name => {
-      name                  = coalesce(vnet.firewall.name, "${vnet_name}_firewall")
+      name                  = coalesce(vnet.firewall.name, "afw-${vnet_name}")
       sku_name              = vnet.firewall.sku_name
       sku_tier              = vnet.firewall.sku_tier
       subnet_address_prefix = vnet.firewall.subnet_address_prefix
@@ -20,7 +20,7 @@ locals {
   fw_default_ip_configuration_pip = {
     for vnet_name, vnet in var.hub_virtual_networks : vnet_name => {
       location            = local.virtual_networks_modules[vnet_name].vnet_location
-      name                = coalesce(vnet.firewall.name, "${vnet_name}-fw-default-ip-configuration-pip")
+      name                = coalesce(vnet.firewall.name, "pip-afw-${vnet_name}")
       resource_group_name = vnet.resource_group_name
       ip_version          = try(vnet.firewall.default_ip_configuration.public_ip_config.ip_version, "IPv4")
       sku_tier            = try(vnet.firewall.default_ip_configuration.public_ip_config.sku_tier, "Regional")

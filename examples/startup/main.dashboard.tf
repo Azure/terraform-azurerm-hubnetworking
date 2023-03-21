@@ -90,6 +90,7 @@ resource "azurerm_network_interface" "dashboard" {
 
 resource "azurerm_linux_virtual_machine" "dashboard" {
   #checkov:skip=CKV_AZURE_50:Only for connectivity test so we use vm extension
+  #checkov:skip=CKV_AZURE_179:Only for connectivity test so we use vm extension
   admin_username = "adminuser"
   location       = azurerm_resource_group.dashboard.location
   name           = "dashboard-machine"

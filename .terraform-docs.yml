@@ -10,7 +10,7 @@ header-from: "_header.md"
 footer-from: "_footer.md"
 
 recursive:
-  enabled: true
+  enabled: false
   path: modules
 
 sections:
