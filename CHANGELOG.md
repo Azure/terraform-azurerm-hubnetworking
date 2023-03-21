@@ -4,6 +4,7 @@
 
 **Merged pull requests:**
 
+- docs: update readme and refactor tests [\#16](https://github.com/Azure/terraform-azure-hubnetworking/pull/16) ([matt-FFFFFF](https://github.com/matt-FFFFFF))
 - build\(deps\): bump github.com/gruntwork-io/terratest from 0.41.10 to 0.41.12 in /test [\#13](https://github.com/Azure/terraform-azure-hubnetworking/pull/13) ([dependabot[bot]](https://github.com/apps/dependabot))
 - 0.1.0 Candidate [\#12](https://github.com/Azure/terraform-azure-hubnetworking/pull/12) ([lonegunmanb](https://github.com/lonegunmanb))
 - build\(deps\): bump github.com/stretchr/testify from 1.8.1 to 1.8.2 in /test [\#11](https://github.com/Azure/terraform-azure-hubnetworking/pull/11) ([dependabot[bot]](https://github.com/apps/dependabot))
