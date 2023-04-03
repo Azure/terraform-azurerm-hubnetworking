@@ -8,7 +8,7 @@ require (
 	github.com/gruntwork-io/terratest v0.41.15
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/stretchr/testify v1.8.2
-	github.com/thanhpk/randstr v1.0.4
+	github.com/thanhpk/randstr v1.0.5
 )
 
 require (
