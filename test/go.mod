@@ -3,7 +3,7 @@ module github.com/Azure/terraform-azure-hubandspoke/test
 go 1.19
 
 require (
-	github.com/Azure/terraform-module-test-helper v0.11.0
+	github.com/Azure/terraform-module-test-helper v0.12.0
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/gruntwork-io/terratest v0.41.15
 	github.com/mitchellh/mapstructure v1.5.0
