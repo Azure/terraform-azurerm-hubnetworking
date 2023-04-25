@@ -3,7 +3,7 @@ module github.com/Azure/terraform-azure-hubandspoke/test
 go 1.19
 
 require (
-	github.com/Azure/terraform-module-test-helper v0.12.0
+	github.com/Azure/terraform-module-test-helper v0.13.0
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/gruntwork-io/terratest v0.41.18
 	github.com/mitchellh/mapstructure v1.5.0
@@ -46,7 +46,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-getter v1.7.1 // indirect
-	github.com/hashicorp/go-getter/v2 v2.2.0 // indirect
+	github.com/hashicorp/go-getter/v2 v2.2.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
@@ -88,12 +88,12 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0 // indirect
-	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
-	golang.org/x/oauth2 v0.6.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/mod v0.10.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/oauth2 v0.7.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.112.0 // indirect
