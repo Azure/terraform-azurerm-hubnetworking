@@ -1,10 +1,11 @@
 # Changelog
 
-## [Unreleased](https://github.com/Azure/terraform-azurerm-hubnetworking/tree/HEAD)
+## [v0.1.0](https://github.com/Azure/terraform-azurerm-hubnetworking/tree/v0.1.0) (2023-04-25)
 
 **Merged pull requests:**
 
 - build\(deps\): bump github.com/gruntwork-io/terratest from 0.41.15 to 0.41.18 in /test [\#22](https://github.com/Azure/terraform-azurerm-hubnetworking/pull/22) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build\(deps\): bump github.com/Azure/terraform-module-test-helper from 0.12.0 to 0.13.0 in /test [\#21](https://github.com/Azure/terraform-azurerm-hubnetworking/pull/21) ([dependabot[bot]](https://github.com/apps/dependabot))
 - build\(deps\): bump github.com/thanhpk/randstr from 1.0.4 to 1.0.5 in /test [\#19](https://github.com/Azure/terraform-azurerm-hubnetworking/pull/19) ([dependabot[bot]](https://github.com/apps/dependabot))
 - build\(deps\): bump github.com/Azure/terraform-module-test-helper from 0.9.2-0.20230221054038-98bfb4448c9a to 0.12.0 in /test [\#17](https://github.com/Azure/terraform-azurerm-hubnetworking/pull/17) ([dependabot[bot]](https://github.com/apps/dependabot))
 - docs: update readme and refactor tests [\#16](https://github.com/Azure/terraform-azurerm-hubnetworking/pull/16) ([matt-FFFFFF](https://github.com/matt-FFFFFF))
