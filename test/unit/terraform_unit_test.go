@@ -26,19 +26,19 @@ func (v vars) toFile(t *testing.T) string {
 }
 
 type vnet struct {
-	Name                     string                `json:"name"`
-	MeshPeeringEnabled       bool                  `json:"mesh_peering_enabled"`
-	Subnets                  map[string]subnet     `json:"subnets"`
-	AddressSpace             []string              `json:"address_space"`
-	ResourceGroupName        string                `json:"resource_group_name"`
-	Location                 string                `json:"location"`
-	ResourceGroupLockEnabled bool                  `json:"resource_group_lock_enabled"`
-	ResourceGroupLockName    string                `json:"resource_group_lock_name"`
-	ResourceGroupCreation    bool                  `json:"resource_group_creation_enabled"`
-	RoutingAddressSpace      []string              `json:"routing_address_space"`
-	Firewall                 *firewall             `json:"firewall"`
-	HubRouterIpAddress       *string               `json:"hub_router_ip_address"`
-	Routes                   map[string]routeEntry `json:"route_table_entries"`
+	Name                     string            `json:"name"`
+	MeshPeeringEnabled       bool              `json:"mesh_peering_enabled"`
+	Subnets                  map[string]subnet `json:"subnets"`
+	AddressSpace             []string          `json:"address_space"`
+	ResourceGroupName        string            `json:"resource_group_name"`
+	Location                 string            `json:"location"`
+	ResourceGroupLockEnabled bool              `json:"resource_group_lock_enabled"`
+	ResourceGroupLockName    string            `json:"resource_group_lock_name"`
+	ResourceGroupCreation    bool              `json:"resource_group_creation_enabled"`
+	RoutingAddressSpace      []string          `json:"routing_address_space"`
+	Firewall                 *firewall         `json:"firewall"`
+	HubRouterIpAddress       *string           `json:"hub_router_ip_address"`
+	Routes                   []routeEntry      `json:"route_table_entries"`
 }
 
 type routeEntry struct {
@@ -152,9 +152,9 @@ func (n vnet) withHubRouterIpAddress(ip string) vnet {
 
 func (n vnet) withUserRouteEntry(r routeEntry) vnet {
 	if n.Routes == nil {
-		n.Routes = make(map[string]routeEntry, 0)
+		n.Routes = make([]routeEntry, 0)
 	}
-	n.Routes[r.Name] = r
+	n.Routes = append(n.Routes, r)
 	return n
 }
 
@@ -178,8 +178,8 @@ func TestUnit_VnetWithMeshPeeringShouldAppearInHubPeeringMap(t *testing.T) {
 		{
 			vars: vars{
 				"hub_virtual_networks": map[string]vnet{
-					"vnet0":       aVnet("vnet0", true).withAddressSpace("10.0.0.0/16"),
-					"vnet1":       aVnet("vnet1", true).withAddressSpace("10.1.0.0/16"),
+					"vnet0":       aVnet("vnet-zero", true).withAddressSpace("10.0.0.0/16"),
+					"vnet1":       aVnet("vnet-one", true).withAddressSpace("10.1.0.0/16"),
 					"nonMeshVnet": aVnet("nonMeshVnet", false).withAddressSpace("10.2.0.0/16"),
 				},
 			},
@@ -211,11 +211,11 @@ func TestUnit_VnetWithMeshPeeringShouldAppearInHubPeeringMap(t *testing.T) {
 				peeringMap := output["hub_peering_map"].(map[string]any)
 				assert.Equal(t, i.expectedPeeringCount, len(peeringMap))
 				for k, v := range peeringMap {
-					assert.Regexp(t, `vnet\d-vnet\d`, k)
-					split := strings.Split(k, "-")
-					srcVnetName := split[0]
-					dstVnetName := split[1]
 					m := v.(map[string]any)
+					srcVnetName := i.vars["hub_virtual_networks"].(map[string]vnet)[m["src_key"].(string)].Name
+					dstVnetName := i.vars["hub_virtual_networks"].(map[string]vnet)[m["dst_key"].(string)].Name
+					expectedPeeringName := fmt.Sprintf("%s-%s", srcVnetName, dstVnetName)
+					assert.Equal(t, expectedPeeringName, k)
 					assert.Equal(t, srcVnetName, m["virtual_network_name"])
 					assert.Equal(t, fmt.Sprintf("%s_id", dstVnetName), m["remote_virtual_network_id"])
 					assert.False(t, strings.Contains(k, "nonMeshVnet"))

@@ -1,3 +1,14 @@
+# These locals defined here to avoid conflict with test framework
+locals {
+  firewall_private_ip = {
+    for vnet_name, fw in azurerm_firewall.fw : vnet_name => fw.ip_configuration[0].private_ip_address
+  }
+  hub_routing = azurerm_route_table.hub_routing
+  virtual_networks_modules = {
+    for vnet_key, vnet_module in module.hub_virtual_networks : vnet_key => vnet_module
+  }
+}
+
 # Create rgs as defined by var.hub_networks
 resource "azurerm_resource_group" "rg" {
   for_each = { for rg in local.resource_group_data : rg.name => rg }
@@ -43,17 +54,13 @@ module "hub_virtual_networks" {
   subnets                                 = try(local.subnets_map[each.key], {})
 }
 
-locals {
-  virtual_networks_modules = { for vnet_name, vnet_module in module.hub_virtual_networks : vnet_name => vnet_module }
-}
-
 resource "azurerm_virtual_network_peering" "hub_peering" {
   for_each = local.hub_peering_map
 
   name = each.key
   # added to make sure dependency graph is correct
   remote_virtual_network_id    = each.value.remote_virtual_network_id
-  resource_group_name          = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.value.virtual_network_name].resource_group_name].name, var.hub_virtual_networks[each.value.virtual_network_name].resource_group_name)
+  resource_group_name          = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.value.src_key].resource_group_name].name, var.hub_virtual_networks[each.value.src_key].resource_group_name)
   virtual_network_name         = each.value.virtual_network_name
   allow_forwarded_traffic      = each.value.allow_forwarded_traffic
   allow_gateway_transit        = each.value.allow_gateway_transit
@@ -81,8 +88,8 @@ resource "azurerm_route_table" "hub_routing" {
     content {
       address_prefix         = route.value.address_prefix
       name                   = route.value.name
-      next_hop_type          = route.value.next_hop_type
       next_hop_in_ip_address = route.value.next_hop_ip_address
+      next_hop_type          = route.value.next_hop_type
     }
   }
   dynamic "route" {
@@ -91,14 +98,10 @@ resource "azurerm_route_table" "hub_routing" {
     content {
       address_prefix         = route.value.address_prefix
       name                   = route.value.name
-      next_hop_type          = route.value.next_hop_type
       next_hop_in_ip_address = route.value.next_hop_ip_address
+      next_hop_type          = route.value.next_hop_type
     }
   }
-}
-
-locals {
-  hub_routing = azurerm_route_table.hub_routing
 }
 
 resource "azurerm_subnet_route_table_association" "hub_routing_creat" {
@@ -171,11 +174,5 @@ resource "azurerm_firewall" "fw" {
     name                 = each.value.default_ip_configuration.name
     public_ip_address_id = azurerm_public_ip.fw_default_ip_configuration_pip[each.key].id
     subnet_id            = azurerm_subnet.fw_subnet[each.key].id
-  }
-}
-
-locals {
-  firewall_private_ip = {
-    for vnet_name, fw in azurerm_firewall.fw : vnet_name => fw.ip_configuration[0].private_ip_address
   }
 }

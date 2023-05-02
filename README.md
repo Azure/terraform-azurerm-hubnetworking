@@ -93,7 +93,7 @@ Description: A map of the hub virtual networks to create. The map key is an arbi
 
 #### Route table entries
 
-- `route_table_entries` - (Optional) A map of additional route table entries to add to the route table for this hub network. Default empty `{}`. The value is an object with the following fields:
+- `route_table_entries` - (Optional) A set of additional route table entries to add to the route table for this hub network. Default empty `[]`. The value is an object with the following fields:
   - `name` - The name of the route table entry.
   - `address_prefix` - The address prefix to match for this route table entry.
   - `next_hop_type` - The type of the next hop. Possible values include `Internet`, `VirtualAppliance`, `VirtualNetworkGateway`, `VnetLocal`, `None`.
@@ -165,14 +165,14 @@ map(object({
     hub_router_ip_address           = optional(string)
     tags                            = optional(map(string), {})
 
-    route_table_entries = optional(map(object({
+    route_table_entries = optional(set(object({
       name           = string
       address_prefix = string
       next_hop_type  = string
 
       has_bgp_override    = optional(bool, false)
       next_hop_ip_address = optional(string)
-    })), {})
+    })), [])
 
     subnets = optional(map(object(
       {
@@ -225,10 +225,6 @@ map(object({
         }))
       }))
     }))
-
-    # TODO: ERGW variables
-
-    # TODO: VPNGW variables
   }))
 ```
 
@@ -256,19 +252,19 @@ The following outputs are exported:
 
 ### <a name="output_firewalls"></a> [firewalls](#output\_firewalls)
 
-Description: n/a
+Description: A curated output of the firewalls created by this module.
 
 ### <a name="output_hub_route_tables"></a> [hub\_route\_tables](#output\_hub\_route\_tables)
 
-Description: n/a
+Description: A curated output of the route tables created by this module.
 
 ### <a name="output_resource_groups"></a> [resource\_groups](#output\_resource\_groups)
 
-Description: n/a
+Description: A curated output of the resource groups created by this module.
 
 ### <a name="output_virtual_networks"></a> [virtual\_networks](#output\_virtual\_networks)
 
-Description: n/a
+Description: A curated output of the virtual networks created by this module.
 
 <!-- markdownlint-enable -->
 <!-- markdownlint-disable MD041 -->
