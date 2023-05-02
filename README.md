@@ -165,14 +165,14 @@ map(object({
     hub_router_ip_address           = optional(string)
     tags                            = optional(map(string), {})
 
-    route_table_entries = optional(map(object({
+    route_table_entries = optional(set(object({
       name           = string
       address_prefix = string
       next_hop_type  = string
 
       has_bgp_override    = optional(bool, false)
       next_hop_ip_address = optional(string)
-    })), {})
+    })), [])
 
     subnets = optional(map(object(
       {
@@ -225,10 +225,6 @@ map(object({
         }))
       }))
     }))
-
-    # TODO: ERGW variables
-
-    # TODO: VPNGW variables
   }))
 ```
 
