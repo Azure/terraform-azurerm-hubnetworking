@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased](https://github.com/Azure/terraform-azurerm-hubnetworking/tree/HEAD)
+
+**Merged pull requests:**
+
+- build\(deps\): bump github.com/gruntwork-io/terratest from 0.41.18 to 0.41.23 in /test [\#23](https://github.com/Azure/terraform-azurerm-hubnetworking/pull/23) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [v0.1.0](https://github.com/Azure/terraform-azurerm-hubnetworking/tree/v0.1.0) (2023-04-25)
 
 **Merged pull requests:**
