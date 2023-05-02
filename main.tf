@@ -1,13 +1,11 @@
 # These locals defined here to avoid conflict with test framework
 locals {
-  virtual_networks_modules = {
-    for vnet_key, vnet_module in module.hub_virtual_networks : vnet_key => vnet_module
-  }
-
-  hub_routing = azurerm_route_table.hub_routing
-
   firewall_private_ip = {
     for vnet_name, fw in azurerm_firewall.fw : vnet_name => fw.ip_configuration[0].private_ip_address
+  }
+  hub_routing = azurerm_route_table.hub_routing
+  virtual_networks_modules = {
+    for vnet_key, vnet_module in module.hub_virtual_networks : vnet_key => vnet_module
   }
 }
 
@@ -90,8 +88,8 @@ resource "azurerm_route_table" "hub_routing" {
     content {
       address_prefix         = route.value.address_prefix
       name                   = route.value.name
-      next_hop_type          = route.value.next_hop_type
       next_hop_in_ip_address = route.value.next_hop_ip_address
+      next_hop_type          = route.value.next_hop_type
     }
   }
   dynamic "route" {
@@ -100,8 +98,8 @@ resource "azurerm_route_table" "hub_routing" {
     content {
       address_prefix         = route.value.address_prefix
       name                   = route.value.name
-      next_hop_type          = route.value.next_hop_type
       next_hop_in_ip_address = route.value.next_hop_ip_address
+      next_hop_type          = route.value.next_hop_type
     }
   }
 }
