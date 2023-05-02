@@ -7,7 +7,7 @@ output "firewalls" {
       public_ip_address  = try(azurerm_public_ip.fw_default_ip_configuration_pip[vnet_name].ip_address)
     }
   }
-  description = "value"
+  description = "A curated output of the firewalls created by this module."
 }
 
 output "hub_route_tables" {
@@ -25,7 +25,7 @@ output "hub_route_tables" {
       ]
     }
   }
-  description = "value"
+  description = "A curated output of the route tables created by this module."
 }
 
 output "resource_groups" {
@@ -36,7 +36,7 @@ output "resource_groups" {
       id       = rg.id
     }
   }
-  description = "value"
+  description = "A curated output of the resource groups created by this module."
 }
 
 output "virtual_networks" {
@@ -51,5 +51,5 @@ output "virtual_networks" {
       hub_router_ip_address = try(azurerm_firewall.fw[vnet_name].ip_configuration[0].private_ip_address, var.hub_virtual_networks[vnet_name].hub_router_ip_address)
     }
   }
-  description = "value"
+  description = "A curated output of the virtual networks created by this module."
 }

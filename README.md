@@ -252,19 +252,19 @@ The following outputs are exported:
 
 ### <a name="output_firewalls"></a> [firewalls](#output\_firewalls)
 
-Description: value
+Description: A curated output of the firewalls created by this module.
 
 ### <a name="output_hub_route_tables"></a> [hub\_route\_tables](#output\_hub\_route\_tables)
 
-Description: value
+Description: A curated output of the route tables created by this module.
 
 ### <a name="output_resource_groups"></a> [resource\_groups](#output\_resource\_groups)
 
-Description: value
+Description: A curated output of the resource groups created by this module.
 
 ### <a name="output_virtual_networks"></a> [virtual\_networks](#output\_virtual\_networks)
 
-Description: value
+Description: A curated output of the virtual networks created by this module.
 
 <!-- markdownlint-enable -->
 <!-- markdownlint-disable MD041 -->
