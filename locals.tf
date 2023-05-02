@@ -17,6 +17,7 @@ locals {
       zones = vnet.firewall.zones
     } if vnet.firewall != null
   }
+
   fw_default_ip_configuration_pip = {
     for vnet_name, vnet in var.hub_virtual_networks : vnet_name => {
       location            = local.virtual_networks_modules[vnet_name].vnet_location
@@ -27,13 +28,16 @@ locals {
       zones               = try(vnet.firewall.default_ip_configuration.public_ip_config.zones, null)
     } if vnet.firewall != null
   }
+
   hub_peering_map = {
     for peerconfig in flatten([
       for k_src, v_src in var.hub_virtual_networks :
       [
         for k_dst, v_dst in var.hub_virtual_networks :
         {
-          name                         = "${k_src}-${k_dst}"
+          name                         = "${local.virtual_networks_modules[k_src].vnet_name}-${local.virtual_networks_modules[k_dst].vnet_name}"
+          src_key                      = k_src
+          dst_key                      = k_dst
           virtual_network_name         = local.virtual_networks_modules[k_src].vnet_name
           remote_virtual_network_id    = local.virtual_networks_modules[k_dst].vnet_id
           allow_virtual_network_access = true
@@ -44,6 +48,7 @@ locals {
       ] if v_src.mesh_peering_enabled
     ]) : peerconfig.name => peerconfig
   }
+
   resource_group_data = toset([
     for k, v in var.hub_virtual_networks : {
       name      = v.resource_group_name
@@ -53,6 +58,7 @@ locals {
       tags      = v.resource_group_tags
     } if v.resource_group_creation_enabled
   ])
+
   route_map = {
     for k_src, v_src in var.hub_virtual_networks : k_src => {
       mesh_routes = flatten([
@@ -66,16 +72,10 @@ locals {
           }
         ] if k_src != k_dst && v_dst.mesh_peering_enabled && can(v_dst.routing_address_space[0])
       ])
-      user_routes = toset([
-        for route_name, route in v_src.route_table_entries : {
-          name                = route.name
-          address_prefix      = route.address_prefix
-          next_hop_type       = route.next_hop_type
-          next_hop_ip_address = route.next_hop_ip_address
-        }
-      ])
+      user_routes = v_src.route_table_entries
     }
   }
+
   subnet_external_route_table_association_map = {
     for assoc in flatten([
       for k, v in var.hub_virtual_networks : [
@@ -87,6 +87,7 @@ locals {
       ]
     ]) : assoc.name => assoc
   }
+
   subnet_route_table_association_map = {
     for assoc in flatten([
       for k, v in var.hub_virtual_networks : [
@@ -98,6 +99,7 @@ locals {
       ]
     ]) : assoc.name => assoc
   }
+
   subnets_map = {
     for k, v in var.hub_virtual_networks : k => {
       for subnetKey, subnet in v.subnets : subnetKey => {

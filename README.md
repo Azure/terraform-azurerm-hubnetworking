@@ -93,7 +93,7 @@ Description: A map of the hub virtual networks to create. The map key is an arbi
 
 #### Route table entries
 
-- `route_table_entries` - (Optional) A map of additional route table entries to add to the route table for this hub network. Default empty `{}`. The value is an object with the following fields:
+- `route_table_entries` - (Optional) A set of additional route table entries to add to the route table for this hub network. Default empty `[]`. The value is an object with the following fields:
   - `name` - The name of the route table entry.
   - `address_prefix` - The address prefix to match for this route table entry.
   - `next_hop_type` - The type of the next hop. Possible values include `Internet`, `VirtualAppliance`, `VirtualNetworkGateway`, `VnetLocal`, `None`.

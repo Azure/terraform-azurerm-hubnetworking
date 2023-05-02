@@ -10,8 +10,8 @@ locals {
     if vnet.firewall != null
   }
   virtual_networks_modules = {
-    for vnet in var.hub_virtual_networks :
-    vnet.name => {
+    for k, vnet in var.hub_virtual_networks :
+    k => {
       vnet_name            = vnet.name
       vnet_id              = "${vnet.name}_id"
       vnet_location        = vnet.location
