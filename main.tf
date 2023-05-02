@@ -60,7 +60,7 @@ resource "azurerm_virtual_network_peering" "hub_peering" {
   name = each.key
   # added to make sure dependency graph is correct
   remote_virtual_network_id    = each.value.remote_virtual_network_id
-  resource_group_name          = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.value.source_key].resource_group_name].name, var.hub_virtual_networks[each.value.source_key].resource_group_name)
+  resource_group_name          = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.value.src_key].resource_group_name].name, var.hub_virtual_networks[each.value.src_key].resource_group_name)
   virtual_network_name         = each.value.virtual_network_name
   allow_forwarded_traffic      = each.value.allow_forwarded_traffic
   allow_gateway_transit        = each.value.allow_gateway_transit
