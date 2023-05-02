@@ -88,8 +88,8 @@ resource "azurerm_route_table" "hub_routing" {
     content {
       address_prefix         = route.value.address_prefix
       name                   = route.value.name
-      next_hop_in_ip_address = route.value.next_hop_ip_address
       next_hop_type          = route.value.next_hop_type
+      next_hop_in_ip_address = route.value.next_hop_ip_address
     }
   }
   dynamic "route" {
@@ -98,8 +98,8 @@ resource "azurerm_route_table" "hub_routing" {
     content {
       address_prefix         = route.value.address_prefix
       name                   = route.value.name
-      next_hop_in_ip_address = route.value.next_hop_ip_address
       next_hop_type          = route.value.next_hop_type
+      next_hop_in_ip_address = route.value.next_hop_ip_address
     }
   }
 }
