@@ -1,5 +1,8 @@
 # These locals defined here to avoid conflict with test framework
-locals {  virtual_networks_modules = { for vnet_key, vnet_module in module.hub_virtual_networks : vnet_key => vnet_module }
+locals {
+  virtual_networks_modules = {
+    for vnet_key, vnet_module in module.hub_virtual_networks : vnet_key => vnet_module
+  }
 
   hub_routing = azurerm_route_table.hub_routing
 
