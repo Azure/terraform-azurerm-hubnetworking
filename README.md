@@ -252,19 +252,19 @@ The following outputs are exported:
 
 ### <a name="output_firewalls"></a> [firewalls](#output\_firewalls)
 
-Description: n/a
+Description: value
 
 ### <a name="output_hub_route_tables"></a> [hub\_route\_tables](#output\_hub\_route\_tables)
 
-Description: n/a
+Description: value
 
 ### <a name="output_resource_groups"></a> [resource\_groups](#output\_resource\_groups)
 
-Description: n/a
+Description: value
 
 ### <a name="output_virtual_networks"></a> [virtual\_networks](#output\_virtual\_networks)
 
-Description: n/a
+Description: value
 
 <!-- markdownlint-enable -->
 <!-- markdownlint-disable MD041 -->
