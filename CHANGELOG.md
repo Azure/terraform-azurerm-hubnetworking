@@ -4,6 +4,7 @@
 
 **Merged pull requests:**
 
+- fix: peering fails when hub network name is not equal to map key \#24 [\#25](https://github.com/Azure/terraform-azurerm-hubnetworking/pull/25) ([matt-FFFFFF](https://github.com/matt-FFFFFF))
 - build\(deps\): bump github.com/gruntwork-io/terratest from 0.41.18 to 0.41.23 in /test [\#23](https://github.com/Azure/terraform-azurerm-hubnetworking/pull/23) ([dependabot[bot]](https://github.com/apps/dependabot))
 
 ## [v0.1.0](https://github.com/Azure/terraform-azurerm-hubnetworking/tree/v0.1.0) (2023-04-25)
