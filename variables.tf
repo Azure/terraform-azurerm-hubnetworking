@@ -4,7 +4,7 @@ variable "hub_virtual_networks" {
     address_space       = list(string)
     location            = string
     resource_group_name = string
-
+    route_table_name                = optional(string)
     bgp_community                   = optional(string)
     ddos_protection_plan_id         = optional(string)
     dns_servers                     = optional(list(string))
