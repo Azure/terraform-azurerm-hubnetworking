@@ -40,7 +40,7 @@ module "hub_mesh" {
       resource_group_lock_enabled     = false
       mesh_peering_enabled            = true
       route_table_name                = "contoso-eastus2-hub-rt"
-      routing_address_space = ["10.1.0.0/16", "192.168.1.0/24"]
+      routing_address_space           = ["10.1.0.0/16", "192.168.1.0/24"]
       firewall = {
         sku_name              = "AZFW_VNet"
         sku_tier              = "Standard"
