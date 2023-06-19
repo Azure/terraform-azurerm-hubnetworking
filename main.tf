@@ -71,9 +71,9 @@ resource "azurerm_virtual_network_peering" "hub_peering" {
 resource "azurerm_route_table" "hub_routing" {
   for_each = local.route_map
 
-  location                      = var.hub_virtual_networks[each.key].location
+  location = var.hub_virtual_networks[each.key].location
   //name                          = "${each.key}-rt"
-  name                          = coalesce (var.hub_virtual_networks[each.key].route_table_name, "${each.key}-rt")
+  name                          = coalesce(var.hub_virtual_networks[each.key].route_table_name, "${each.key}-rt")
   resource_group_name           = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name, var.hub_virtual_networks[each.key].resource_group_name)
   disable_bgp_route_propagation = false
   tags                          = {}
