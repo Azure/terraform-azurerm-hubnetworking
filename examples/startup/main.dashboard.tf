@@ -98,7 +98,7 @@ resource "azurerm_linux_virtual_machine" "dashboard" {
     azurerm_network_interface.dashboard.id,
   ]
   resource_group_name = azurerm_resource_group.dashboard.name
-  size                = "Standard_D2lds_v5"
+  size                = "Standard_B2ms"
 
   os_disk {
     caching              = "ReadWrite"
