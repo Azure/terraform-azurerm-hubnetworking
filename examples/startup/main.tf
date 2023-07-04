@@ -22,6 +22,7 @@ module "hub_mesh" {
       resource_group_creation_enabled = false
       resource_group_lock_enabled     = false
       mesh_peering_enabled            = true
+      route_table_name                = "contosohotel-eastus-hub-rt"
       routing_address_space           = ["10.0.0.0/16", "192.168.0.0/24"]
       firewall = {
         sku_name              = "AZFW_VNet"
@@ -38,6 +39,7 @@ module "hub_mesh" {
       resource_group_creation_enabled = false
       resource_group_lock_enabled     = false
       mesh_peering_enabled            = true
+      route_table_name                = "contoso-eastus2-hub-rt"
       routing_address_space           = ["10.1.0.0/16", "192.168.1.0/24"]
       firewall = {
         sku_name              = "AZFW_VNet"
