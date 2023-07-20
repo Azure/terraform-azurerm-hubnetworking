@@ -3,7 +3,7 @@ module github.com/Azure/terraform-azure-hubandspoke/test
 go 1.19
 
 require (
-	github.com/Azure/terraform-module-test-helper v0.13.0
+	github.com/Azure/terraform-module-test-helper v0.14.0
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/gruntwork-io/terratest v0.43.8
 	github.com/mitchellh/mapstructure v1.5.0
@@ -89,10 +89,10 @@ require (
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/oauth2 v0.7.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/oauth2 v0.8.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/term v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
