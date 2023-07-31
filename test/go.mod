@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/Azure/terraform-module-test-helper v0.14.0
 	github.com/ahmetb/go-linq/v3 v3.2.0
-	github.com/gruntwork-io/terratest v0.43.8
+	github.com/gruntwork-io/terratest v0.43.11
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/stretchr/testify v1.8.4
 	github.com/thanhpk/randstr v1.0.6
