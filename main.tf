@@ -132,6 +132,20 @@ resource "azurerm_public_ip" "fw_default_ip_configuration_pip" {
   zones               = each.value.zones
 }
 
+resource "azurerm_public_ip" "fw_management_ip_configuration_pip" {
+  for_each = local.fw_management_ip_configuration_pip
+
+  allocation_method   = "Static"
+  location            = each.value.location
+  name                = each.value.name
+  resource_group_name = each.value.resource_group_name
+  ip_version          = each.value.ip_version
+  sku                 = "Standard"
+  sku_tier            = each.value.sku_tier
+  tags                = {}
+  zones               = each.value.zones
+}
+
 resource "azurerm_subnet" "fw_subnet" {
   for_each = local.firewalls
 
@@ -139,6 +153,19 @@ resource "azurerm_subnet" "fw_subnet" {
   name                 = "AzureFirewallSubnet"
   resource_group_name  = var.hub_virtual_networks[each.key].resource_group_name
   virtual_network_name = module.hub_virtual_networks[each.key].vnet_name
+}
+
+resource "azurerm_subnet" "fw_management_subnet" {
+  for_each = local.firewall_management_subnets
+
+  address_prefixes     = each.value.address_prefixes
+  name                 = each.value.name
+  resource_group_name  = each.value.resource_group_name
+  virtual_network_name = each.value.virtual_network_name
+
+  depends_on = [
+    module.hub_virtual_networks
+  ]
 }
 
 resource "azurerm_subnet_route_table_association" "fw_subnet_routing_creat" {
@@ -174,5 +201,15 @@ resource "azurerm_firewall" "fw" {
     name                 = each.value.default_ip_configuration.name
     public_ip_address_id = azurerm_public_ip.fw_default_ip_configuration_pip[each.key].id
     subnet_id            = azurerm_subnet.fw_subnet[each.key].id
+  }
+
+  dynamic "management_ip_configuration" {
+    for_each = each.value.sku_tier == "Basic" ? ["managementIpConfiguration"] : []
+
+    content {
+      name                 = each.value.management_ip_configuration.name
+      public_ip_address_id = azurerm_public_ip.fw_management_ip_configuration_pip[each.key].id
+      subnet_id            = azurerm_subnet.fw_management_subnet[each.key].id
+    }
   }
 }

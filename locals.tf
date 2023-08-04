@@ -14,18 +14,40 @@ locals {
       default_ip_configuration = {
         name = try(coalesce(vnet.firewall.management_ip_configuration.name, "default"), "default")
       }
+      management_ip_configuration = {
+        name = try(coalesce(vnet.firewall.management_ip_configuration.name, "defaultMgmt"), "defaultMgmt")
+      }
       zones = vnet.firewall.zones
     } if vnet.firewall != null
+  }
+  firewall_management_subnets = {
+    for k, v in var.hub_virtual_networks : k => {
+      address_prefixes     = [v.firewall.management_subnet_address_prefix]
+      name                 = "AzureFirewallManagementSubnet"
+      resource_group_name  = v.resource_group_name
+      virtual_network_name = v.name
+    }
+    if try(v.firewall.sku_tier, "FirewallNull") == "Basic" && v.firewall != null
   }
   fw_default_ip_configuration_pip = {
     for vnet_name, vnet in var.hub_virtual_networks : vnet_name => {
       location            = local.virtual_networks_modules[vnet_name].vnet_location
-      name                = coalesce(vnet.firewall.name, "pip-afw-${vnet_name}")
+      name                = try(vnet.firewall.default_ip_configuration.public_ip_config.name, "pip-afw-${vnet_name}")
       resource_group_name = vnet.resource_group_name
       ip_version          = try(vnet.firewall.default_ip_configuration.public_ip_config.ip_version, "IPv4")
       sku_tier            = try(vnet.firewall.default_ip_configuration.public_ip_config.sku_tier, "Regional")
       zones               = try(vnet.firewall.default_ip_configuration.public_ip_config.zones, null)
     } if vnet.firewall != null
+  }
+  fw_management_ip_configuration_pip = {
+    for k, v in var.hub_virtual_networks : k => {
+      location            = local.virtual_networks_modules[k].vnet_location
+      name                = try(v.firewall.management_ip_configuration.public_ip_config.name, "pip-afw-mgmt-${k}")
+      resource_group_name = v.resource_group_name
+      ip_version          = try(v.firewall.management_ip_coniguration.public_ip_config.ip_version, "IPv4")
+      sku_tier            = try(v.firewall.management_ip_coniguration.public_ip_config.sku_tier, "Regional")
+      zones               = try(v.firewall.management_ip_coniguration.public_ip_config.zones, null)
+    } if try(v.firewall.sku_tier, "FirewallNull") == "Basic" && v.firewall != null
   }
   hub_peering_map = {
     for peerconfig in flatten([
@@ -64,7 +86,7 @@ locals {
             name                = "${k_dst}-${replace(cidr, "/", "-")}"
             address_prefix      = cidr
             next_hop_type       = "VirtualAppliance"
-            next_hop_ip_address = try(local.firewall_private_ip[k_dst], v_src.hub_router_ip_address)
+            next_hop_ip_address = try(local.firewall_private_ip[k_dst], v_dst.hub_router_ip_address)
           }
         ] if k_src != k_dst && v_dst.mesh_peering_enabled && can(v_dst.routing_address_space[0])
       ])
@@ -108,3 +130,4 @@ locals {
     }
   }
 }
+

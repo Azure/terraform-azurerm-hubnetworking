@@ -57,24 +57,34 @@ variable "hub_virtual_networks" {
     )), {})
 
     firewall = optional(object({
-      sku_name              = string
-      sku_tier              = string
-      subnet_address_prefix = string
-      subnet_route_table_id = optional(string)
-      name                  = optional(string)
-      dns_servers           = optional(list(string))
-      firewall_policy_id    = optional(string)
-      private_ip_ranges     = optional(list(string))
-      threat_intel_mode     = optional(string, "Alert")
-      zones                 = optional(list(string))
-      tags                  = optional(map(string))
+      sku_name                         = string
+      sku_tier                         = string
+      subnet_address_prefix            = string
+      dns_servers                      = optional(list(string))
+      firewall_policy_id               = optional(string)
+      management_subnet_address_prefix = optional(string, null)
+      name                             = optional(string)
+      private_ip_ranges                = optional(list(string))
+      subnet_route_table_id            = optional(string)
+      tags                             = optional(map(string))
+      threat_intel_mode                = optional(string, "Alert")
+      zones                            = optional(list(string))
       default_ip_configuration = optional(object({
         name = optional(string)
         public_ip_config = optional(object({
-          name       = optional(set(string))
-          zones      = optional(set(string))
           ip_version = optional(string)
+          name       = optional(string)
           sku_tier   = optional(string, "Regional")
+          zones      = optional(set(string))
+        }))
+      }))
+      management_ip_configuration = optional(object({
+        name = optional(string)
+        public_ip_config = optional(object({
+          ip_version = optional(string)
+          name       = optional(string)
+          sku_tier   = optional(string, "Regional")
+          zones      = optional(set(string))
         }))
       }))
     }))
@@ -141,18 +151,26 @@ A map of the hub virtual networks to create. The map key is an arbitrary value t
   - `sku_name` - The name of the SKU to use for the Azure Firewall. Possible values include `AZFW_Hub`, `AZFW_VNet`.
   - `sku_tier` - The tier of the SKU to use for the Azure Firewall. Possible values include `Basic`, ``Standard`, `Premium`.
   - `subnet_address_prefix` - The IPv4 address prefix to use for the Azure Firewall subnet in CIDR format. Needs to be a part of the virtual network's address space.
-  - `subnet_route_table_id` = (Optional) The resource id of the Route Table which should be associated with the Azure Firewall subnet. If not specified the module will assign the generated route table.
-  - `name` - (Optional) The name of the firewall resource. If not specified will use `afw-{vnetname}`.
   - `dns_servers` - (Optional) A list of DNS server IP addresses for the Azure Firewall.
   - `firewall_policy_id` - (Optional) The resource id of the Azure Firewall Policy to associate with the Azure Firewall.
+  - `management_subnet_address_prefix` - (Optional) The IPv4 address prefix to use for the Azure Firewall management subnet in CIDR format. Needs to be a part of the virtual network's address space.
+  - `name` - (Optional) The name of the firewall resource. If not specified will use `afw-{vnetname}`.
   - `private_ip_ranges` - (Optional) A list of private IP ranges to use for the Azure Firewall, to which the firewall will not NAT traffic. If not specified will use RFC1918.
+  - `subnet_route_table_id` = (Optional) The resource id of the Route Table which should be associated with the Azure Firewall subnet. If not specified the module will assign the generated route table.
+  - `tags` - (Optional) A map of tags to apply to the Azure Firewall. If not specified
   - `threat_intel_mode` - (Optional) The threat intelligence mode for the Azure Firewall. Possible values include `Alert`, `Deny`, `Off`.
   - `zones` - (Optional) A list of availability zones to use for the Azure Firewall. If not specified will be `null`.
-  - `tags` - (Optional) A map of tags to apply to the Azure Firewall. If not specified
   - `default_ip_configuration` - (Optional) An object with the following fields. If not specified the defaults below will be used:
     - `name` - (Optional) The name of the default IP configuration. If not specified will use `default`.
     - `public_ip_config` - (Optional) An object with the following fields:
       - `name` - (Optional) The name of the public IP configuration. If not specified will use `pip-afw-{vnetname}`.
+      - `zones` - (Optional) A list of availability zones to use for the public IP configuration. If not specified will be `null`.
+      - `ip_version` - (Optional) The IP version to use for the public IP configuration. Possible values include `IPv4`, `IPv6`. If not specified will be `IPv4`.
+      - `sku_tier` - (Optional) The SKU tier to use for the public IP configuration. Possible values include `Regional`, `Global`. If not specified will be `Regional`.
+  - `management_ip_configuration` - (Optional) An object with the following fields. If not specified the defaults below will be used:
+    - `name` - (Optional) The name of the management IP configuration. If not specified will use `defaultMgmt`.
+    - `public_ip_config` - (Optional) An object with the following fields:
+      - `name` - (Optional) The name of the public IP configuration. If not specified will use `pip-afw-mgmt-<Map Key>`.
       - `zones` - (Optional) A list of availability zones to use for the public IP configuration. If not specified will be `null`.
       - `ip_version` - (Optional) The IP version to use for the public IP configuration. Possible values include `IPv4`, `IPv6`. If not specified will be `IPv4`.
       - `sku_tier` - (Optional) The SKU tier to use for the public IP configuration. Possible values include `Regional`, `Global`. If not specified will be `Regional`.
@@ -163,6 +181,18 @@ DESCRIPTION
   validation {
     condition     = length(var.hub_virtual_networks) > 0
     error_message = "At least one hub virtual network must be defined."
+  }
+  validation {
+    condition     = alltrue([for k, v in var.hub_virtual_networks : v.firewall.sku_tier == "Basic" ? length(regexall("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}$", coalesce(v.firewall.management_subnet_address_prefix, "NonIp"))) > 0 : true if v.firewall != null])
+    error_message = "A valid management_subnet_address_prefix must be specified when using Basic SKU for Azure Firewall."
+  }
+  validation {
+    condition     = alltrue([for k, v in var.hub_virtual_networks : contains(["AZFW_VNet"], v.firewall.sku_name) if v.firewall != null])
+    error_message = "Azure Firewall SKU must be AZFW_VNet."
+  }
+  validation {
+    condition     = alltrue([for v in var.hub_virtual_networks : length(regexall("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$", coalesce(v.hub_router_ip_address, "NonIp"))) > 0 if v.firewall == null && v.routing_address_space != null])
+    error_message = "A valid hub_router_ip_address must be provided if there is no Firewall in the hub but routing_address_space is specified."
   }
 }
 

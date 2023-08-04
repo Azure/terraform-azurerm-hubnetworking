@@ -27,7 +27,7 @@ module "hubnetworks" {
       firewall = {
         subnet_address_prefix = "192.168.1.0/24"
         sku_tier              = "Premium"
-        sku_name              = "AZFW_Hub"
+        sku_name              = "AZFW_VNet"
       }
     }
   }

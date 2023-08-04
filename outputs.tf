@@ -1,10 +1,11 @@
 output "firewalls" {
   value = {
     for vnet_name, fw in azurerm_firewall.fw : vnet_name => {
-      id                 = fw.id
-      name               = fw.name
-      private_ip_address = try(fw.ip_configuration[0].private_ip_address, null)
-      public_ip_address  = try(azurerm_public_ip.fw_default_ip_configuration_pip[vnet_name].ip_address)
+      id                           = fw.id
+      name                         = fw.name
+      private_ip_address           = try(fw.ip_configuration[0].private_ip_address, null)
+      public_ip_address            = try(azurerm_public_ip.fw_default_ip_configuration_pip[vnet_name].ip_address)
+      management_public_ip_address = try(azurerm_public_ip.fw_management_ip_configuration_pip[vnet_name].ip_address, null)
     }
   }
   description = "A curated output of the firewalls created by this module."
@@ -42,7 +43,7 @@ output "resource_groups" {
 output "virtual_networks" {
   value = {
     for vnet_name, vnet_mod in module.hub_virtual_networks : vnet_name => {
-      name                  = vnet_name
+      name                  = vnet_mod.vnet_name
       resource_group_name   = var.hub_virtual_networks[vnet_name].resource_group_name
       id                    = vnet_mod.vnet_id
       location              = vnet_mod.vnet_location
