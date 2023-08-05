@@ -191,7 +191,7 @@ DESCRIPTION
     error_message = "Azure Firewall SKU must be AZFW_VNet."
   }
   validation {
-    condition     = alltrue(flatten([for v_src in var.hub_virtual_networks : [for v_dst in var.hub_virtual_networks : length(regexall("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$", coalesce(v_dst.hub_router_ip_address, "NonIp"))) > 0 if v_dst.firewall == null && v_src.routing_address_space != null && v_src != v_dst]]))
+    condition     = alltrue(flatten([for v_src in var.hub_virtual_networks : [for v_dst in var.hub_virtual_networks : coalesce(v_dst.hub_router_ip_address, "") != "" if v_dst.firewall == null && v_src.routing_address_space != null && v_src != v_dst]]))
     error_message = "A valid hub_router_ip_address must be provided if there is no Firewall in the remote hub but routing_address_space is specified in the local hub."
   }
 }
