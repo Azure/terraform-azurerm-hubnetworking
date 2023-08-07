@@ -661,19 +661,17 @@ func TestUnit_VnetWithFirewallShouldCreateFirewall(t *testing.T) {
 				withResourceGroupName("rg0").
 				withAddressSpace("10.0.0.0/16").
 				withFirewall(firewall{
-					SkuName:                       "AZFW_VNet",
-					SkuTier:                       "Basic",
-					SubnetAddressPrefix:           "10.0.255.0/24",
-					ManagementSubnetAddressPrefix: "10.0.1.0/24",
+					SkuName:             "AZFW_VNet",
+					SkuTier:             "Standard",
+					SubnetAddressPrefix: "10.0.255.0/24",
 				}),
 			expected: map[string]firewallOutputEntry{
 				"vnet": {
-					Name:                          "afw-vnet",
-					SkuName:                       "AZFW_VNet",
-					SkuTier:                       "Basic",
-					SubnetAddressPrefix:           "10.0.255.0/24",
-					ManagementSubnetAddressPrefix: "10.0.1.0/24",
-					ThreatIntelMode:               "Alert",
+					Name:                "afw-vnet",
+					SkuName:             "AZFW_VNet",
+					SkuTier:             "Standard",
+					SubnetAddressPrefix: "10.0.255.0/24",
+					ThreatIntelMode:     "Alert",
 					DefaultIpConfig: &IpConfigOutputEntry{
 						Name: "default",
 					},
@@ -731,13 +729,13 @@ func TestUnit_RoutingAddressSpaceShouldGenerateMeshRoutes(t *testing.T) {
 						Name:             "vnet1-10.1.0.0-16",
 						AddressPrefix:    "10.1.0.0/16",
 						NextHopType:      "VirtualAppliance",
-						NextHopIpAddress: String("fake_fw_vnet0_ip"),
+						NextHopIpAddress: String("fake_fw_vnet1_ip"),
 					},
 					{
 						Name:             "vnet1-192.168.1.0-24",
 						AddressPrefix:    "192.168.1.0/24",
 						NextHopType:      "VirtualAppliance",
-						NextHopIpAddress: String("fake_fw_vnet0_ip"),
+						NextHopIpAddress: String("fake_fw_vnet1_ip"),
 					},
 				},
 				"vnet1": {
@@ -745,13 +743,13 @@ func TestUnit_RoutingAddressSpaceShouldGenerateMeshRoutes(t *testing.T) {
 						Name:             "vnet0-10.0.0.0-16",
 						AddressPrefix:    "10.0.0.0/16",
 						NextHopType:      "VirtualAppliance",
-						NextHopIpAddress: String("fake_fw_vnet1_ip"),
+						NextHopIpAddress: String("fake_fw_vnet0_ip"),
 					},
 					{
 						Name:             "vnet0-192.168.0.0-24",
 						AddressPrefix:    "192.168.0.0/24",
 						NextHopType:      "VirtualAppliance",
-						NextHopIpAddress: String("fake_fw_vnet1_ip"),
+						NextHopIpAddress: String("fake_fw_vnet0_ip"),
 					},
 				},
 			},

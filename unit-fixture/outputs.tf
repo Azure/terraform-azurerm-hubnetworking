@@ -25,3 +25,11 @@ output "fw_default_ip_configuration_pip" {
 output "firewalls" {
   value = local.firewalls
 }
+
+output "fw_management_ip_configuration_pip" {
+  value = local.fw_management_ip_configuration_pip
+}
+
+output "firewall_management_subnets" {
+  value = local.firewall_management_subnets
+}  
