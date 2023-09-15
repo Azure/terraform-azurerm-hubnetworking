@@ -14,6 +14,7 @@ locals {
       default_ip_configuration = {
         name = try(coalesce(vnet.firewall.management_ip_configuration.name, "default"), "default")
       }
+      additional_ip_configurations = vnet.firewall.additional_ip_configurations
       management_ip_configuration = {
         name = try(coalesce(vnet.firewall.management_ip_configuration.name, "defaultMgmt"), "defaultMgmt")
       }
@@ -129,5 +130,8 @@ locals {
       }
     }
   }
+  fw_additional_pip_id = merge([for vnet_name, firewall in local.firewalls :
+    try({ for name, c in firewall.additional_ip_configurations : "${vnet_name}-${name}" => c.public_ip_address_id }, {})
+  ]...)
 }
 

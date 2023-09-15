@@ -202,7 +202,13 @@ resource "azurerm_firewall" "fw" {
     public_ip_address_id = azurerm_public_ip.fw_default_ip_configuration_pip[each.key].id
     subnet_id            = azurerm_subnet.fw_subnet[each.key].id
   }
-
+  dynamic "ip_configuration" {
+    for_each = each.value.additional_ip_configurations
+    content {
+      name                 = ip_configuration.value.name
+      public_ip_address_id = ip_configuration.value.public_ip_address_id
+    }
+  }
   dynamic "management_ip_configuration" {
     for_each = each.value.sku_tier == "Basic" ? ["managementIpConfiguration"] : []
 
@@ -212,4 +218,6 @@ resource "azurerm_firewall" "fw" {
       subnet_id            = azurerm_subnet.fw_management_subnet[each.key].id
     }
   }
+
+  depends_on = [data.azurerm_public_ip.fw_additional_pip]
 }
