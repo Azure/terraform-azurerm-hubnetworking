@@ -219,5 +219,5 @@ resource "azurerm_firewall" "fw" {
     }
   }
 
-  depends_on = [data.azurerm_public_ip.fw_additional_pip]
+  depends_on = [data.azurerm_public_ip.fw_additional_pip_guard]
 }

@@ -1,4 +1,4 @@
-data "azurerm_public_ip" "fw_additional_pip" {
+data "azurerm_public_ip" "fw_additional_pip_guard" {
   for_each = local.fw_additional_pip_id
 
   # /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mygroup1/providers/Microsoft.Network/publicIPAddresses/myPublicIpAddress1

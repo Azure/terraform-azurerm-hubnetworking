@@ -131,7 +131,7 @@ locals {
     }
   }
   fw_additional_pip_id = merge([for vnet_name, firewall in local.firewalls :
-    try({ for name, c in firewall.additional_ip_configurations : "${vnet_name}-${name}" => c.public_ip_address_id }, {})
+    firewall.additional_ip_configurations != null ? { for name, c in firewall.additional_ip_configurations : "${vnet_name}-${name}" => c.public_ip_address_id } : {}
   ]...)
 }
 
