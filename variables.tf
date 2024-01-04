@@ -177,11 +177,6 @@ A map of the hub virtual networks to create. The map key is an arbitrary value t
 DESCRIPTION
   nullable    = false
 
-  # Validate that there is at least 1 hub network defined
-  validation {
-    condition     = length(var.hub_virtual_networks) > 0
-    error_message = "At least one hub virtual network must be defined."
-  }
   validation {
     condition     = alltrue([for k, v in var.hub_virtual_networks : v.firewall.sku_tier == "Basic" ? length(regexall("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}$", coalesce(v.firewall.management_subnet_address_prefix, "NonIp"))) > 0 : true if v.firewall != null])
     error_message = "A valid management_subnet_address_prefix must be specified when using Basic SKU for Azure Firewall."
