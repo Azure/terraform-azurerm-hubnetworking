@@ -17,3 +17,9 @@ func TestExmaples_startup(t *testing.T) {
 		assert.NotNil(t, net.ParseIP(pip))
 	})
 }
+
+func TestExmaples_fw_multiple_public_ip(t *testing.T) {
+	test_helper.RunE2ETest(t, "../../", "examples/fw_multiple_public_ips", terraform.Options{
+		Upgrade: true,
+	}, nil)
+}
