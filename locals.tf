@@ -34,7 +34,7 @@ locals {
       location            = local.virtual_networks_modules[vnet_name].vnet_location
       name                = try(vnet.firewall.default_ip_configuration.public_ip_config.name, "pip-afw-${vnet_name}")
       resource_group_name = vnet.resource_group_name
-      tags                = vnet.firewall.default_ip_configuration.public_ip_config.tags
+      tags                = vnet.firewall.default_ip_configuration.tags
       ip_version          = try(vnet.firewall.default_ip_configuration.public_ip_config.ip_version, "IPv4")
       sku_tier            = try(vnet.firewall.default_ip_configuration.public_ip_config.sku_tier, "Regional")
       zones               = try(vnet.firewall.default_ip_configuration.public_ip_config.zones, null)
@@ -45,7 +45,7 @@ locals {
       location            = local.virtual_networks_modules[k].vnet_location
       name                = try(v.firewall.management_ip_configuration.public_ip_config.name, "pip-afw-mgmt-${k}")
       resource_group_name = v.resource_group_name
-      tags                = v.firewall.management_ip_configuration.public_ip_config.tags
+      tags                = v.firewall.management_ip_configuration.tags
       ip_version          = try(v.firewall.management_ip_coniguration.public_ip_config.ip_version, "IPv4")
       sku_tier            = try(v.firewall.management_ip_coniguration.public_ip_config.sku_tier, "Regional")
       zones               = try(v.firewall.management_ip_coniguration.public_ip_config.zones, null)
