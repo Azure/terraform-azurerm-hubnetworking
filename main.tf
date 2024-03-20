@@ -75,7 +75,7 @@ resource "azurerm_route_table" "hub_routing" {
   name                          = coalesce(var.hub_virtual_networks[each.key].route_table_name, "route-${each.key}")
   resource_group_name           = try(azurerm_resource_group.rg[var.hub_virtual_networks[each.key].resource_group_name].name, var.hub_virtual_networks[each.key].resource_group_name)
   disable_bgp_route_propagation = false
-  tags                          = {}
+  tags                          = var.hub_virtual_networks[each.key].route_table_tags
 
   route {
     address_prefix = "0.0.0.0/0"
@@ -128,7 +128,7 @@ resource "azurerm_public_ip" "fw_default_ip_configuration_pip" {
   ip_version          = each.value.ip_version
   sku                 = "Standard"
   sku_tier            = each.value.sku_tier
-  tags                = {}
+  tags                = each.value.tags
   zones               = each.value.zones
 }
 
@@ -142,7 +142,7 @@ resource "azurerm_public_ip" "fw_management_ip_configuration_pip" {
   ip_version          = each.value.ip_version
   sku                 = "Standard"
   sku_tier            = each.value.sku_tier
-  tags                = {}
+  tags                = each.value.tags
   zones               = each.value.zones
 }
 
