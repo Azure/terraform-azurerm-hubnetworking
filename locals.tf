@@ -46,9 +46,9 @@ locals {
       name                = try(v.firewall.management_ip_configuration.public_ip_config.name, "pip-afw-mgmt-${k}")
       resource_group_name = v.resource_group_name
       tags                = v.firewall.management_ip_configuration.tags
-      ip_version          = try(v.firewall.management_ip_coniguration.public_ip_config.ip_version, "IPv4")
-      sku_tier            = try(v.firewall.management_ip_coniguration.public_ip_config.sku_tier, "Regional")
-      zones               = try(v.firewall.management_ip_coniguration.public_ip_config.zones, null)
+      ip_version          = try(v.firewall.management_ip_configuration.public_ip_config.ip_version, "IPv4")
+      sku_tier            = try(v.firewall.management_ip_configuration.public_ip_config.sku_tier, "Regional")
+      zones               = try(v.firewall.management_ip_configuration.public_ip_config.zones, null)
     } if try(v.firewall.sku_tier, "FirewallNull") == "Basic" && v.firewall != null
   }
   hub_peering_map = {
