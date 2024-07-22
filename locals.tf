@@ -12,7 +12,7 @@ locals {
       tags                  = vnet.firewall.tags
       threat_intel_mode     = vnet.firewall.threat_intel_mode
       default_ip_configuration = {
-        name = try(coalesce(vnet.firewall.management_ip_configuration.name, "default"), "default")
+        name = try(coalesce(vnet.firewall.default_ip_configuration.name, "default"), "default")
       }
       management_ip_configuration = {
         name = try(coalesce(vnet.firewall.management_ip_configuration.name, "defaultMgmt"), "defaultMgmt")
