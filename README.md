@@ -143,6 +143,9 @@ Description: A map of the hub virtual networks to create. The map key is an arbi
       - `zones` - (Optional) A list of availability zones to use for the public IP configuration. If not specified will be `null`.
       - `ip_version` - (Optional) The IP version to use for the public IP configuration. Possible values include `IPv4`, `IPv6`. If not specified will be `IPv4`.
       - `sku_tier` - (Optional) The SKU tier to use for the public IP configuration. Possible values include `Regional`, `Global`. If not specified will be `Regional`.
+  - `additional_ip_configurations` - (Optional) A map of object with the following fields, the key must be a string literal (We don't support `subnet_id` since only one ip\_configuration block may contain a `subnet_id` according to the [document](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/firewall#subnet_id).):
+      - `name` - (Required)  The name of the public IP configuration.
+      - `public_ip_address_id` - (Optional) The ID of the Public IP Address associated with the firewall. You must set `create_before_destroy=true` to the azurerm\_public\_ip resource lifecycle block according to the [document](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/firewall#public_ip_address_id).
   - `management_ip_configuration` - (Optional) An object with the following fields. If not specified the defaults below will be used:
     - `name` - (Optional) The name of the management IP configuration. If not specified will use `defaultMgmt`.
     - `public_ip_config` - (Optional) An object with the following fields:
@@ -233,6 +236,10 @@ map(object({
           zones      = optional(set(string))
         }))
       }))
+      additional_ip_configurations = optional(map(object({
+        name                 = string
+        public_ip_address_id = optional(string)
+      })), {})
       management_ip_configuration = optional(object({
         name = optional(string)
         public_ip_config = optional(object({
@@ -281,6 +288,7 @@ The following resources are used by this module:
 - [azurerm_subnet_route_table_association.hub_routing_creat](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_route_table_association) (resource)
 - [azurerm_subnet_route_table_association.hub_routing_external](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_route_table_association) (resource)
 - [azurerm_virtual_network_peering.hub_peering](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering) (resource)
+- [azurerm_public_ip.fw_additional_pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/public_ip) (data source)
 
 ## Outputs
 
