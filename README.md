@@ -1,3 +1,12 @@
+# DEPRECATION NOTICE
+
+THIS MODULE IS ARCHIVED AND NO LONGER MAINTAINED.
+
+PLEASE REFER TO THE FOLLOWING ALTERNATIVE MODULES:
+
+- https://github.com/Azure/terraform-azurerm-avm-ptn-alz-connectivity-hub-and-spoke-vnet
+- https://github.com/Azure/terraform-azurerm-avm-ptn-alz-connectivity-virtual-wan
+
 <!-- BEGIN_TF_DOCS -->
 # Terraform Verified Module for multi-hub network architectures
 
